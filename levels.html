@@ -2,81 +2,147 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
 
-    <title>任務地圖｜心中有數</title>
-
+    <title>銀河航線圖｜心中有數</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
 
   <body>
-    <div class="space-background" aria-hidden="true"></div>
+    <div class="space-background"></div>
 
     <header class="site-header">
       <a class="logo" href="index.html">
         <span class="logo-core">數</span>
         <span>
           心中有數
-          <small>DSE MATH MISSION</small>
+          <small>MATH UNIVERSE</small>
         </span>
       </a>
 
       <nav>
-        <a href="levels.html" class="active">任務地圖</a>
+        <a href="levels.html" class="active">銀河地圖</a>
         <a href="leaderboard.html">排行榜</a>
+        <button data-sound-toggle type="button">🔇</button>
         <button data-logout type="button">登出</button>
       </nav>
     </header>
 
-    <main class="page-container">
-      <section class="dashboard-header">
+    <main class="galaxy-page">
+      <section class="galaxy-dashboard">
         <div>
           <p class="system-label">
-            MISSION CONTROL
+            GALAXY NAVIGATION SYSTEM
           </p>
 
           <h1>
-            歡迎，<span id="playerName">探索者</span>
+            歡迎回來，
+            <span id="playerName">探索者</span>
           </h1>
 
-          <p>
-            選擇已解鎖的任務。每完成五題，
-            下一個數學區域便會開放。
+          <p id="currentObjective">
+            正在分析下一個探索目標……
           </p>
         </div>
 
-        <div class="score-module">
-          <span>累計能量分數</span>
-          <strong id="playerScore">0</strong>
-          <small>POINTS</small>
+        <div class="dashboard-stats">
+          <div>
+            <span>總分</span>
+            <strong id="playerScore">0</strong>
+          </div>
+
+          <div>
+            <span>完成星球</span>
+            <strong id="planetProgress">0 / 0</strong>
+          </div>
+
+          <div>
+            <span>探索區域</span>
+            <strong id="questionProgress">0 / 0</strong>
+          </div>
         </div>
       </section>
 
-      <section>
-        <div class="section-title">
-          <div>
-            <p class="system-label">
-              AVAILABLE MISSIONS
+      <section class="galaxy-layout">
+        <div class="galaxy-map-panel">
+          <div class="map-heading">
+            <div>
+              <p class="system-label">
+                INTERSTELLAR ROUTE
+              </p>
+              <h2>數學銀河航線</h2>
+            </div>
+
+            <span class="map-legend">
+              ● 探索中　✓ 已完成　◆ 未開放
+            </span>
+          </div>
+
+          <div id="galaxyMap" class="galaxy-map">
+            <p>正在載入銀河資料……</p>
+          </div>
+        </div>
+
+        <aside class="ship-hud brutal-panel">
+          <p class="panel-code">
+            EXPLORER SHIP
+          </p>
+
+          <div id="shipVisual" class="ship-hangar"></div>
+
+          <label for="shipNameInput">飛船名稱</label>
+
+          <div class="ship-name-row">
+            <input
+              id="shipNameInput"
+              maxlength="20"
+              type="text"
+            />
+
+            <button
+              id="renameShip"
+              class="mini-button"
+              type="button"
+            >
+              儲存
+            </button>
+          </div>
+
+          <h3 id="shipName">NOVA-01</h3>
+          <p id="shipModel">初代探索艇 MK-I</p>
+
+          <div class="ship-data">
+            <div>
+              <span>飛船等級</span>
+              <strong id="shipLevel">LV.1</strong>
+            </div>
+
+            <div>
+              <span>飛船經驗</span>
+              <strong id="shipXP">0 XP</strong>
+            </div>
+          </div>
+
+          <div class="xp-track">
+            <i id="xpBar"></i>
+          </div>
+
+          <small id="nextXP">
+            距離下一次進化：100 XP
+          </small>
+
+          <div class="nova-message">
+            <strong>NOVA-數</strong>
+            <p id="novaMessage">
+              正在連接導航系統……
             </p>
-            <h2>星際任務地圖</h2>
           </div>
 
-          <div class="mini-stat">
-            已完成
-            <strong id="totalProgress">0 / 20</strong>
-          </div>
-        </div>
-
-        <div
-          id="levelGrid"
-          class="mission-grid"
-        >
-          <p>正在載入任務資料...</p>
-        </div>
+          <p id="shipMessage" class="message"></p>
+        </aside>
       </section>
     </main>
 
@@ -86,4 +152,3 @@
     <script src="levels.js"></script>
   </body>
 </html>
-
