@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0"
@@ -17,11 +18,7 @@
     <meta name="robots" content="index, follow" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     <link
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+HK:wght@400;500;600;700;800&display=swap"
@@ -39,15 +36,16 @@
       <a
         class="brand"
         href="#top"
-        aria-label="心中有數 首頁"
+        aria-label="返回心中有數首頁"
       >
         <span class="brand-mark">數</span>
+
         <span>
           心中有數<span class="muted">DSE</span>
         </span>
       </a>
 
-      <nav>
+      <nav aria-label="主要導覽">
         <a href="#practice">開始闖關</a>
         <a href="#topics">關卡地圖</a>
         <a href="#how">闖關方法</a>
@@ -58,23 +56,28 @@
         class="progress-button"
         id="progressButton"
         type="button"
+        aria-label="查看目前闖關進度"
       >
-        <span class="dot"></span>
-        第一關進度
+        <span class="dot" aria-hidden="true"></span>
+
+        關卡進度
+
         <strong id="headerProgress">0 / 5</strong>
+
         <span class="score-top">
-          ｜分數：<strong id="score">0</strong>
+          ｜分數：
+          <strong id="score">0</strong>
         </span>
       </button>
     </header>
 
     <main id="top">
       <!-- 首頁主視覺 -->
-      <section class="hero">
+      <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow">DSE 數學・基礎闖關平台</p>
 
-          <h1>
+          <h1 id="hero-title">
             一關一關，<br />
             把數學變成<em>心中有數</em>。
           </h1>
@@ -89,7 +92,8 @@
               class="button primary"
               href="#practice"
             >
-              挑戰第一關 <span>→</span>
+              挑戰第一關
+              <span aria-hidden="true">→</span>
             </a>
 
             <a
@@ -101,7 +105,10 @@
           </div>
 
           <div class="trust">
-            <span class="avatar-stack">
+            <span
+              class="avatar-stack"
+              aria-hidden="true"
+            >
               <i>1</i>
               <i>2</i>
               <i>3</i>
@@ -113,11 +120,16 @@
 
         <div
           class="hero-card"
-          aria-label="學習提示"
+          aria-label="第一關學習提示"
         >
           <div class="card-top">
-            <span>第一關・代數起步</span>
-            <span class="sun">✦</span>
+            <span>第一關・代數起步・5 題挑戰</span>
+            <span
+              class="sun"
+              aria-hidden="true"
+            >
+              ✦
+            </span>
           </div>
 
           <div class="formula">
@@ -130,7 +142,10 @@
             它就是兩個相同括號相乘。
           </p>
 
-          <div class="mini-progress">
+          <div
+            class="mini-progress"
+            aria-hidden="true"
+          >
             <span></span>
           </div>
 
@@ -150,32 +165,52 @@
           </div>
 
           <div class="buddy-body">x²</div>
+
           <span class="buddy-hand left-hand">★</span>
           <span class="buddy-hand right-hand">+</span>
         </div>
 
-        <div class="scribble s1">✳</div>
-        <div class="scribble s2">＋</div>
+        <div
+          class="scribble s1"
+          aria-hidden="true"
+        >
+          ✳
+        </div>
+
+        <div
+          class="scribble s2"
+          aria-hidden="true"
+        >
+          ＋
+        </div>
       </section>
+
 
       <!-- 題目練習區 -->
       <section
         class="daily"
         id="practice"
+        aria-labelledby="practice-title"
       >
         <div class="section-heading">
           <div>
-            <p class="eyebrow">
+            <p
+              class="eyebrow"
+              id="currentLevelLabel"
+            >
               第一關・代數起步・5 題挑戰
             </p>
 
-            <h2>
+            <h2 id="practice-title">
               先破第一關，掌握最重要的基本功。
             </h2>
           </div>
 
-          <div class="streak">
-            ⚑ 已過關
+          <div
+            class="streak"
+            aria-live="polite"
+          >
+            ⚑ 已完成
             <strong id="streak">0</strong>
             關
           </div>
@@ -185,34 +220,45 @@
           <aside
             class="question-list"
             id="questionList"
-            aria-label="今日題目"
+            aria-label="關卡題目列表"
           ></aside>
 
-          <article class="question-panel">
+          <article
+            class="question-panel"
+            aria-live="polite"
+          >
             <div class="question-meta">
               <span id="questionTopic">
                 一元一次方程
               </span>
 
-              <span class="level">基礎</span>
+              <span class="level">
+                基礎
+              </span>
 
               <span
                 class="q-number"
                 id="questionNumber"
               >
-                第 1 / 5 題
+                第 1 關・第 1 / 5 題
               </span>
             </div>
 
-            <h3 id="questionTitle"></h3>
+            <h3 id="questionTitle">
+              解一元一次方程
+            </h3>
 
             <p
               class="question-text"
               id="questionText"
-            ></p>
+            >
+              解方程：3x + 5 = 20
+            </p>
 
             <div class="answer-row">
-              <label for="answer">你的答案</label>
+              <label for="answer">
+                你的答案
+              </label>
 
               <div>
                 <input
@@ -221,6 +267,7 @@
                   inputmode="decimal"
                   autocomplete="off"
                   placeholder="輸入答案"
+                  aria-describedby="feedback"
                 />
 
                 <button
@@ -260,89 +307,135 @@
             <div
               class="solution"
               id="solution"
+              aria-live="polite"
             ></div>
           </article>
         </div>
       </section>
 
+
       <!-- 關卡地圖 -->
       <section
         class="topics"
         id="topics"
+        aria-labelledby="topics-title"
       >
         <div class="section-heading">
           <div>
             <p class="eyebrow">由淺入深</p>
-            <h2>你的數學關卡地圖。</h2>
+
+            <h2 id="topics-title">
+              你的數學關卡地圖。
+            </h2>
           </div>
 
           <a
             href="#practice"
             class="text-link"
           >
-            挑戰第一關 →
+            挑戰第一關
+            <span aria-hidden="true">→</span>
           </a>
         </div>
 
         <div class="topic-grid">
+          <!-- 第 1 關 -->
           <button
             class="topic-card coral current-level"
-            data-topic="代數"
+            data-topic="代數起步"
+            data-level="1"
             type="button"
+            aria-label="開始第一關：代數起步"
           >
             <span class="topic-icon">1</span>
-            <span class="topic-count">挑戰中</span>
+
+            <span class="topic-count">
+              挑戰中
+            </span>
 
             <h3>代數起步</h3>
-            <p>方程、代數式與運算</p>
+
+            <p>
+              方程、代數式與運算
+            </p>
 
             <div class="card-line">
               <i id="levelOneLine"></i>
             </div>
           </button>
 
+
+          <!-- 第 2 關 -->
           <button
             class="topic-card blue locked"
+            data-topic="幾何入門"
+            data-level="2"
             type="button"
-            disabled
+            aria-label="第二關：幾何入門，完成第一關後解鎖"
           >
             <span class="topic-icon">2</span>
-            <span class="topic-count">🔒 未解鎖</span>
+
+            <span class="topic-count">
+              🔒 未解鎖
+            </span>
 
             <h3>幾何入門</h3>
-            <p>角度、面積、畢氏定理</p>
+
+            <p>
+              角度、面積、周界與直徑
+            </p>
 
             <div class="card-line">
               <i></i>
             </div>
           </button>
 
+
+          <!-- 第 3 關 -->
           <button
             class="topic-card yellow locked"
+            data-topic="數據解碼"
+            data-level="3"
             type="button"
-            disabled
+            aria-label="第三關：數據解碼，完成第二關後解鎖"
           >
             <span class="topic-icon">3</span>
-            <span class="topic-count">🔒 未解鎖</span>
+
+            <span class="topic-count">
+              🔒 未解鎖
+            </span>
 
             <h3>數據解碼</h3>
-            <p>平均數、統計圖表</p>
+
+            <p>
+              平均數、中位數、眾數與全距
+            </p>
 
             <div class="card-line">
               <i></i>
             </div>
           </button>
 
+
+          <!-- 第 4 關 -->
           <button
             class="topic-card green locked"
+            data-topic="百分數實戰"
+            data-level="4"
             type="button"
-            disabled
+            aria-label="第四關：百分數實戰，完成第三關後解鎖"
           >
             <span class="topic-icon">4</span>
-            <span class="topic-count">🔒 未解鎖</span>
+
+            <span class="topic-count">
+              🔒 未解鎖
+            </span>
 
             <h3>百分數實戰</h3>
-            <p>折扣、利息、比例</p>
+
+            <p>
+              折扣、增加、減少與百分比
+            </p>
 
             <div class="card-line">
               <i></i>
@@ -351,15 +444,20 @@
         </div>
       </section>
 
+
       <!-- 排行榜 -->
       <section
         id="leaderboard"
         class="leaderboard"
+        aria-labelledby="leaderboard-title"
       >
         <div class="section-heading">
           <div>
             <p class="eyebrow">排行榜</p>
-            <h2>最高分數</h2>
+
+            <h2 id="leaderboard-title">
+              最高分數
+            </h2>
           </div>
         </div>
 
@@ -388,65 +486,87 @@
           </button>
         </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>排名</th>
-              <th>玩家</th>
-              <th>分數</th>
-            </tr>
-          </thead>
+        <div class="table-wrapper">
+          <table>
+            <caption class="visually-hidden">
+              數學闖關排行榜
+            </caption>
 
-          <tbody id="leaderboard-body">
-            <tr>
-              <td colspan="3">讀取中...</td>
-            </tr>
-          </tbody>
-        </table>
+            <thead>
+              <tr>
+                <th scope="col">排名</th>
+                <th scope="col">玩家</th>
+                <th scope="col">分數</th>
+              </tr>
+            </thead>
+
+            <tbody id="leaderboard-body">
+              <tr>
+                <td colspan="3">
+                  讀取中...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
+
 
       <!-- 闖關方法 -->
       <section
         class="how"
         id="how"
+        aria-labelledby="how-title"
       >
-        <p class="eyebrow">闖關不是硬撐</p>
+        <p class="eyebrow">
+          闖關不是硬撐
+        </p>
 
-        <h2>每一關，都有方法帶你過。</h2>
+        <h2 id="how-title">
+          每一關，都有方法帶你過。
+        </h2>
 
         <div class="steps">
           <article>
             <b>01</b>
+
             <h3>選定一關</h3>
+
             <p>
-              從基礎開始，完成 5 題才會打開下一關。
+              從基礎開始，每完成 5 題才會解鎖下一關。
             </p>
           </article>
 
           <article>
             <b>02</b>
+
             <h3>需要時拿提示</h3>
+
             <p>
-              給你方向，而不是一下子給出答案。
+              提示會給你解題方向，而不是直接給出答案。
             </p>
           </article>
 
           <article>
             <b>03</b>
+
             <h3>掌握後再前進</h3>
+
             <p>
-              看懂每一步，真正把概念變成實力。
+              看懂每一步，真正把概念變成自己的實力。
             </p>
           </article>
         </div>
       </section>
     </main>
 
+
     <!-- 頁尾 -->
     <footer>
       <a
         class="brand"
         href="#top"
+        aria-label="返回心中有數首頁"
       >
         <span class="brand-mark">數</span>
 
@@ -455,16 +575,24 @@
         </span>
       </a>
 
-      <p>一關一關，走到你想去的地方。</p>
+      <p>
+        一關一關，走到你想去的地方。
+      </p>
 
-      <small>© 2026 心中有數 DSE</small>
+      <small>
+        © 2026 心中有數 DSE
+      </small>
     </footer>
+
 
     <!-- 答題成功彈出視窗 -->
     <div
       class="celebration"
       id="celebration"
       aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="celebrationTitle"
     >
       <div
         class="confetti"
@@ -479,9 +607,16 @@
       </div>
 
       <div class="celebration-card">
-        <span class="medal">★</span>
+        <span
+          class="medal"
+          aria-hidden="true"
+        >
+          ★
+        </span>
 
-        <p class="eyebrow">答對了！</p>
+        <p class="eyebrow">
+          答對了！
+        </p>
 
         <h2 id="celebrationTitle">
           太厲害了！
@@ -501,10 +636,11 @@
       </div>
     </div>
 
-    <!-- JavaScript 載入順序：Supabase 必須在 app.js 前面 -->
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="challenges.js"></script>
-<script src="app.js"></script>
 
+    <!-- JavaScript 載入順序非常重要 -->
+    <!-- Supabase 必須先於 app.js 載入 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+    <script src="challenges.js"></script>
   </body>
 </html>
