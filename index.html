@@ -2,154 +2,218 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1"
     />
 
-    <title>心中有數｜DSE Math Mission</title>
+    <title>心中有數｜Math Universe</title>
 
     <meta
       name="description"
-      content="以科幻任務形式挑戰 DSE 數學，每五題完成一個關卡。"
+      content="駕駛你的專屬飛船，探索數學宇宙中的不同星球。"
     />
 
     <link rel="stylesheet" href="styles.css" />
   </head>
 
   <body>
-    <div class="space-background" aria-hidden="true"></div>
+    <div id="splashScreen" class="splash-screen">
+      <button
+        id="skipIntro"
+        class="skip-intro"
+        type="button"
+      >
+        SKIP INTRO
+      </button>
+
+      <div class="splash-stars"></div>
+
+      <div class="splash-content">
+        <div class="boot-logo">
+          <span>數</span>
+          <div class="boot-rings"></div>
+        </div>
+
+        <p class="system-label">
+          MATH UNIVERSE OPERATING SYSTEM
+        </p>
+
+        <h1 class="glitch-title" data-text="心中有數">
+          心中有數
+        </h1>
+
+        <p class="splash-subtitle">
+          CYBER MATH EXPLORATION NETWORK
+        </p>
+
+        <div class="loading-console">
+          <div class="loading-track">
+            <i id="loadingBar"></i>
+          </div>
+
+          <div class="loading-data">
+            <span id="loadingText">
+              SYSTEM BOOTING...
+            </span>
+
+            <strong id="loadingPercent">
+              0%
+            </strong>
+          </div>
+        </div>
+
+        <button
+          id="enterUniverse"
+          class="enter-universe"
+          type="button"
+          hidden
+        >
+          PRESS TO ENTER
+        </button>
+      </div>
+    </div>
+
+    <div class="space-background"></div>
 
     <header class="site-header">
       <a class="logo" href="index.html">
         <span class="logo-core">數</span>
         <span>
           心中有數
-          <small>DSE MATH MISSION</small>
+          <small>MATH UNIVERSE</small>
         </span>
       </a>
 
       <nav>
         <a href="index.html" class="active">首頁</a>
-        <a href="levels.html">任務地圖</a>
+        <a href="levels.html">銀河地圖</a>
         <a href="leaderboard.html">排行榜</a>
+        <button data-sound-toggle type="button">🔇</button>
         <a href="login.html" class="nav-button">登入</a>
       </nav>
     </header>
 
     <main>
-      <section class="hero">
+      <section class="hero universe-hero">
         <div class="hero-content">
           <p class="system-label">
-            SYSTEM ONLINE // DSE MATH ACADEMY
+            MATH UNIVERSE // ONLINE
           </p>
 
           <h1>
-            啟動你的<br />
-            <span>數學星際任務</span>
+            駕駛你的飛船<br />
+            <span>探索數學宇宙</span>
           </h1>
 
           <p class="hero-description">
-            每五題是一個任務關卡。完成解題、累積能量分數，
-            與其他數學探索者比較排名。
+            每一顆星球都是一個數學關卡，每個星球包含
+            5 個探索區域。完成任務、累積能量、進化你的
+            專屬宇宙飛船。
           </p>
 
           <div class="hero-actions">
-            <a
-              href="login.html"
-              class="button primary"
-            >
-              登入並開始任務
+            <a href="login.html" class="game-button pink">
+              啟動探索任務
             </a>
 
-            <a
-              href="leaderboard.html"
-              class="button secondary"
-            >
-              查看排行榜
+            <a href="levels.html" class="game-button cyan">
+              進入銀河地圖
             </a>
           </div>
 
           <div class="feature-row">
             <div>
-              <strong>04</strong>
-              <span>任務關卡</span>
+              <strong>∞</strong>
+              <span>可擴展星球</span>
             </div>
 
             <div>
-              <strong>20</strong>
-              <span>數學挑戰</span>
+              <strong>5</strong>
+              <span>每星球探索區</span>
             </div>
 
             <div>
-              <strong>100</strong>
-              <span>最高能量</span>
+              <strong>XP</strong>
+              <span>飛船進化系統</span>
             </div>
           </div>
         </div>
 
         <div class="hero-visual">
-          <div class="anime-orb">
-            <div class="orb-ring ring-one"></div>
-            <div class="orb-ring ring-two"></div>
+          <div class="hero-planet planet-purple">
+            <div class="planet-ring"></div>
+          </div>
 
-            <div class="ai-face">
-              <span class="eye"></span>
-              <span class="eye"></span>
-              <span class="mouth"></span>
+          <div class="hero-ship">
+            <div class="ship-display">
+              <div class="player-ship level-3">
+                <div class="ship-flame"></div>
+                <div class="ship-wing wing-left"></div>
+                <div class="ship-wing wing-right"></div>
+                <div class="ship-body">
+                  <div class="ship-window"></div>
+                  <div class="ship-core"></div>
+                </div>
+                <div class="ship-fin"></div>
+                <div class="ship-cannon cannon-left"></div>
+                <div class="ship-cannon cannon-right"></div>
+              </div>
             </div>
-
-            <p>AI-MATH</p>
           </div>
 
           <div class="floating-code code-a">
-            x² + 2x + 1
+            PLANET ALGEON
           </div>
 
           <div class="floating-code code-b">
-            πr²
+            +5 ENERGY
           </div>
 
           <div class="floating-code code-c">
-            MISSION READY
+            SHIP SYSTEM READY
           </div>
         </div>
       </section>
 
       <section class="home-section">
-        <p class="system-label">MISSION PROTOCOL</p>
-        <h2>你的任務流程</h2>
+        <p class="system-label">
+          EXPLORATION PROTOCOL
+        </p>
+
+        <h2>你的宇宙探索流程</h2>
 
         <div class="info-grid">
-          <article class="glass-card">
-            <span class="card-number">01</span>
-            <h3>建立探索者帳戶</h3>
+          <article class="brutal-card pink-card">
+            <span>01</span>
+            <h3>建立探索者身份</h3>
             <p>
-              註冊後，分數及進度會永久保存在你的帳戶。
+              註冊後取得你的初代數學探索艇。
             </p>
           </article>
 
-          <article class="glass-card">
-            <span class="card-number">02</span>
-            <h3>完成五題任務</h3>
+          <article class="brutal-card blue-card">
+            <span>02</span>
+            <h3>登陸數學星球</h3>
             <p>
-              每題只能提交一次，答對可獲得 5 分。
+              每顆星球包含 5 個不同探索區域。
             </p>
           </article>
 
-          <article class="glass-card">
-            <span class="card-number">03</span>
-            <h3>取得解題分析</h3>
+          <article class="brutal-card purple-card">
+            <span>03</span>
+            <h3>累積飛船經驗</h3>
             <p>
-              提交後立即查看正確答案及完整解題步驟。
+              完成題目和星球即可取得 XP。
             </p>
           </article>
 
-          <article class="glass-card">
-            <span class="card-number">04</span>
-            <h3>挑戰星際排名</h3>
+          <article class="brutal-card lime-card">
+            <span>04</span>
+            <h3>進化宇宙飛船</h3>
             <p>
-              所有分數由系統自動統計，與其他玩家比較。
+              解鎖新型號，前往更遙遠的數學星區。
             </p>
           </article>
         </div>
@@ -157,7 +221,9 @@
     </main>
 
     <footer>
-      <p>© 2026 心中有數 DSE Math Mission</p>
+      © 2026 心中有數｜MATH UNIVERSE
     </footer>
+
+    <script src="splash.js"></script>
   </body>
 </html>
