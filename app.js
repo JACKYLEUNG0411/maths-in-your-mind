@@ -3,9 +3,7 @@ const SUPABASE_URL = 'https://zlafcarhdhtugcmeaqzv.supabase.co/rest/v1/';
 const SUPABASE_KEY = 'sb_publishable_msVVLrRWTYHKAnia15J-Pw_nDdcK3Mb';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// === 以下是你原本的代码 ===
-const questions = [
-  ...
+
 const questions = [
   {topic:'一元一次方程', title:'解一元一次方程', text:'解方程： 3x + 5 = 20', answer:'5', hint:'先把 + 5 移到等號右邊，兩邊同時減 5。', solution:'3x + 5 = 20<br>3x = 20 − 5<br>3x = 15<br>x = 15 ÷ 3 = <strong>5</strong>'},
   {topic:'代數式', title:'合併同類項', text:'化簡： 4a + 3a − 2', answer:'7a-2', accepted:['7a-2','7a − 2','7a–2'], hint:'只有含有 a 的項才可以合併；常數 −2 保持不變。', solution:'4a 和 3a 都含有 a，所以可以相加：<br>4a + 3a − 2 = <strong>7a − 2</strong>'},
