@@ -14,13 +14,20 @@ const authMessage =
   document.getElementById("authMessage");
 
 function switchMode(mode) {
-  const isLogin = mode === "login";
+  const loginMode = mode === "login";
 
-  loginForm.hidden = !isLogin;
-  registerForm.hidden = isLogin;
+  loginForm.hidden = !loginMode;
+  registerForm.hidden = loginMode;
 
-  showLogin.classList.toggle("active", isLogin);
-  showRegister.classList.toggle("active", !isLogin);
+  showLogin.classList.toggle(
+    "active",
+    loginMode
+  );
+
+  showRegister.classList.toggle(
+    "active",
+    !loginMode
+  );
 
   showMessage(authMessage, "");
 }
@@ -36,66 +43,55 @@ showRegister.addEventListener("click", () => {
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const submitButton =
+  const button =
     loginForm.querySelector("button[type='submit']");
 
-  const email =
-    document.getElementById("loginEmail")
-      .value.trim();
-
-  const password =
-    document.getElementById("loginPassword")
-      .value;
-
-  submitButton.disabled = true;
-  submitButton.textContent = "驗證中...";
-
-  showMessage(authMessage, "正在驗證探索者身份...");
+  button.disabled = true;
+  button.textContent = "身份驗證中...";
 
   const { error } =
     await window.db.auth.signInWithPassword({
-      email,
-      password
+      email:
+        document
+          .getElementById("loginEmail")
+          .value.trim(),
+
+      password:
+        document
+          .getElementById("loginPassword")
+          .value
     });
 
-  submitButton.disabled = false;
-  submitButton.textContent = "登入任務中心";
+  button.disabled = false;
+  button.textContent = "登上探索飛船";
 
   if (error) {
-    let errorText = error.message;
-
-    if (error.message.includes("Invalid login")) {
-      errorText = "電郵或密碼不正確。";
-    } else if (
-      error.message.includes("Email not confirmed")
-    ) {
-      errorText = "請先到電郵信箱確認帳戶。";
-    }
-
     showMessage(
       authMessage,
-      errorText,
+      error.message.includes("Invalid login")
+        ? "電郵或密碼不正確。"
+        : error.message,
       "error"
     );
 
     return;
   }
 
-  showMessage(
-    authMessage,
-    "登入成功，正在進入任務中心...",
-    "success"
-  );
+  playTone(720, 0.15, "square");
 
   const parameters =
     new URLSearchParams(location.search);
 
-  const nextPage =
+  const requested =
     parameters.get("next") || "levels.html";
 
-  setTimeout(() => {
-    location.href = nextPage;
-  }, 500);
+  const allowed =
+    /^(levels|practice|leaderboard)\.html(\?.*)?$/.test(
+      requested
+    );
+
+  location.href =
+    allowed ? requested : "levels.html";
 });
 
 registerForm.addEventListener(
@@ -104,25 +100,29 @@ registerForm.addEventListener(
     event.preventDefault();
 
     const displayName =
-      document.getElementById("displayName")
+      document
+        .getElementById("displayName")
         .value.trim();
 
     const email =
-      document.getElementById("registerEmail")
+      document
+        .getElementById("registerEmail")
         .value.trim();
 
     const password =
-      document.getElementById("registerPassword")
+      document
+        .getElementById("registerPassword")
         .value;
 
-    const confirmPassword =
-      document.getElementById("confirmPassword")
+    const confirmation =
+      document
+        .getElementById("confirmPassword")
         .value;
 
-    if (displayName.length < 1) {
+    if (!displayName) {
       showMessage(
         authMessage,
-        "請輸入玩家名稱。",
+        "請輸入探索者名稱。",
         "error"
       );
       return;
@@ -137,7 +137,7 @@ registerForm.addEventListener(
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (password !== confirmation) {
       showMessage(
         authMessage,
         "兩次輸入的密碼不相同。",
@@ -146,13 +146,13 @@ registerForm.addEventListener(
       return;
     }
 
-    const submitButton =
+    const button =
       registerForm.querySelector(
         "button[type='submit']"
       );
 
-    submitButton.disabled = true;
-    submitButton.textContent = "建立中...";
+    button.disabled = true;
+    button.textContent = "正在建造飛船...";
 
     const { data, error } =
       await window.db.auth.signUp({
@@ -165,44 +165,23 @@ registerForm.addEventListener(
         }
       });
 
-    submitButton.disabled = false;
-    submitButton.textContent =
-      "建立探索者帳戶";
+    button.disabled = false;
+    button.textContent =
+      "建立探索者與飛船";
 
     if (error) {
-      let errorText = error.message;
-
-      if (
-        error.message.includes(
-          "Database error saving new user"
-        )
-      ) {
-        errorText =
-          "這個玩家名稱可能已被使用，請更換名稱。";
-      }
-
-      if (
-        error.message.includes(
-          "already registered"
-        )
-      ) {
-        errorText =
-          "這個電郵已經註冊，請直接登入。";
-      }
-
       showMessage(
         authMessage,
-        errorText,
+        error.message,
         "error"
       );
-
       return;
     }
 
     if (!data.session) {
       showMessage(
         authMessage,
-        "帳戶已建立。請到電郵信箱確認後再登入。",
+        "帳戶已建立，請到信箱確認電郵後登入。",
         "success"
       );
 
@@ -210,23 +189,14 @@ registerForm.addEventListener(
       return;
     }
 
-    showMessage(
-      authMessage,
-      "帳戶建立成功，正在進入任務中心...",
-      "success"
-    );
-
-    setTimeout(() => {
-      location.href = "levels.html";
-    }, 700);
+    location.href = "levels.html";
   }
 );
 
-(async function redirectLoggedInUser() {
+(async function redirectIfLoggedIn() {
   const user = await getCurrentUser();
 
   if (user) {
     location.href = "levels.html";
   }
 })();
-
