@@ -1,7 +1,12 @@
-// === Supabase 云端数据库配置 ===
-const SUPABASE_URL = 'https://zlafcarhdhtugcmeaqzv.supabase.co/rest/v1/';
-const SUPABASE_KEY = 'sb_publishable_msVVLrRWTYHKAnia15J-Pw_nDdcK3Mb';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const SUPABASE_URL = "https://zlafcarhdhtugcmeaqzv.supabase.co/rest/v1/";
+const SUPABASE_KEY = "sb_publishable_msVVLrRWTYHKAnia15J-Pw_nDdcK3Mb";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
 
 
 const questions = [
