@@ -685,10 +685,13 @@
       /*
         solution 是教師／管理員預先寫入的解題內容。
       */
-      elements.solutionText.innerHTML =
-        result.solution ||
-        result.explanation ||
-        "<p>暫無解題步驟。</p>";
+    setText(
+  elements.solutionText,
+  result.solution ||
+  result.explanation ||
+  "暫無解題步驟。"
+);
+
     }
 
     if (elements.resultPanel) {
