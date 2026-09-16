@@ -1,520 +1,763 @@
-let planet;
-let allPlanets = [];
-let questions = [];
-let activeIndex = 0;
-let answerMap = new Map();
-let pendingAnswer = "";
+/*
+  practice.js
+  Maths in Your Mind
+*/
 
-const $ = (id) => document.getElementById(id);
+(() => {
+  "use strict";
 
-async function initialisePractice() {
-  const user = await requireLogin();
-  if (!user) return;
+  /*
+    必須先在 config.js 建立：
 
-  const levelId = Number(
-    new URLSearchParams(location.search)
-      .get("level")
-  );
+    window.db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+  */
 
-  if (!Number.isInteger(levelId)) {
-    location.href = "levels.html";
+  const db = window.db;
+
+  if (!db) {
+    console.error("window.db 不存在，請先檢查 config.js");
     return;
   }
 
-  const [
-    planetResult,
-    planetsResult,
-    questionsResult,
-    allQuestionsResult,
-    answersResult,
-    summary
-  ] = await Promise.all([
-    window.db
+  // --------------------------------------------------
+  // 基本工具
+  // --------------------------------------------------
+
+  const $ = (id) => document.getElementById(id);
+
+  const params = new URLSearchParams(window.location.search);
+
+  const levelId = Number(
+    params.get("level_id") ||
+    params.get("level") ||
+    params.get("id") ||
+    1
+  );
+
+  let currentUser = null;
+  let level = null;
+  let questions = [];
+  let currentIndex = 0;
+  let submittedResults = new Map();
+
+  // --------------------------------------------------
+  // DOM 元素
+  // 支援不同命名方式，避免 HTML 少一個欄位時整頁停止
+  // --------------------------------------------------
+
+  const els = {
+    levelName:
+      $("levelName") ||
+      $("planetName") ||
+      $("levelTitle"),
+
+    levelDescription:
+      $("levelDescription") ||
+      $("planetDescription"),
+
+    progress:
+      $("progress") ||
+      $("questionProgress"),
+
+    progressText:
+      $("progressText") ||
+      $("questionProgressText"),
+
+    questionNumber:
+      $("questionNumber") ||
+      $("currentQuestionNumber"),
+
+    questionTitle:
+      $("questionTitle") ||
+      $("questionTitleText"),
+
+    questionText:
+      $("questionText") ||
+      $("questionBody"),
+
+    hint:
+      $("hint") ||
+      $("hintText") ||
+      $("questionHint"),
+
+    topic:
+      $("topic") ||
+      $("questionTopic"),
+
+    zoneName:
+      $("zoneName") ||
+      $("areaName"),
+
+    zoneDescription:
+      $("zoneDescription") ||
+      $("areaDescription"),
+
+    difficulty:
+      $("difficulty") ||
+      $("difficultyText"),
+
+    points:
+      $("points") ||
+      $("questionPoints"),
+
+    answerInput:
+      $("answerInput") ||
+      $("answer"),
+
+    submitAnswer:
+      $("submitAnswer") ||
+      $("submitBtn"),
+
+    previousQuestion:
+      $("previousQuestion") ||
+      $("prevQuestion") ||
+      $("prevBtn"),
+
+    nextQuestion:
+      $("nextQuestion") ||
+      $("nextBtn"),
+
+    answerMessage:
+      $("answerMessage") ||
+      $("resultMessage") ||
+      $("feedback"),
+
+    solution:
+      $("solution") ||
+      $("solutionText") ||
+      $("explanation"),
+
+    correctAnswer:
+      $("correctAnswer") ||
+      $("answerResult"),
+
+    score:
+      $("score") ||
+      $("questionScore"),
+
+    xp:
+      $("xp") ||
+      $("questionXP"),
+
+    completedMessage:
+      $("completedMessage") ||
+      $("levelCompleted"),
+
+    loading:
+      $("loading") ||
+      $("loadingMessage")
+  };
+
+  // --------------------------------------------------
+  // 頁面初始化
+  // --------------------------------------------------
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  async function init() {
+    try {
+      showLoading(true);
+      clearMessage();
+
+      if (!Number.isInteger(levelId) || levelId <= 0) {
+        throw new Error("找不到有效的星球 ID。");
+      }
+
+      const {
+        data: sessionData,
+        error: sessionError
+      } = await db.auth.getSession();
+
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      currentUser = sessionData?.session?.user || null;
+
+      if (!currentUser) {
+        showMessage("請先登入，才能開始答題。", "error");
+
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1200);
+
+        return;
+      }
+
+      await loadLevel();
+      await loadQuestions();
+      await loadExistingAnswers();
+      bindEvents();
+
+      if (questions.length === 0) {
+        throw new Error("這個星球目前沒有題目。");
+      }
+
+      renderQuestion();
+    } catch (error) {
+      console.error(error);
+      showMessage(
+        error?.message || "載入題目時發生錯誤。",
+        "error"
+      );
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  // --------------------------------------------------
+  // 讀取星球
+  // --------------------------------------------------
+
+  async function loadLevel() {
+    const { data, error } = await db
       .from("levels")
       .select("*")
       .eq("id", levelId)
-      .single(),
+      .maybeSingle();
 
-    window.db
-      .from("levels")
-      .select("*")
-      .eq("is_published", true)
-      .order("planet_order"),
+    if (error) {
+      throw error;
+    }
 
-    window.db
+    if (!data) {
+      throw new Error("找不到這個星球。");
+    }
+
+    level = data;
+
+    setText(els.levelName, data.name || "未命名星球");
+    setText(
+      els.levelDescription,
+      data.description || ""
+    );
+  }
+
+  // --------------------------------------------------
+  // 讀取題目
+  // --------------------------------------------------
+
+  async function loadQuestions() {
+    const { data, error } = await db
       .from("questions")
-      .select("*")
+      .select(`
+        id,
+        level_id,
+        question_order,
+        title,
+        question_text,
+        hint,
+        topic,
+        zone_name,
+        zone_description,
+        zone_icon,
+        difficulty,
+        dse_topic,
+        question_type,
+        is_challenge,
+        points
+      `)
       .eq("level_id", levelId)
-      .order("question_order"),
+      .order("question_order", {
+        ascending: true
+      });
 
-    window.db
-      .from("questions")
-      .select("id, level_id"),
+    if (error) {
+      throw error;
+    }
 
-    window.db
-      .from("answers")
-      .select(
-        "question_id, is_correct, points_awarded"
-      ),
-
-    getMySummary()
-  ]);
-
-  if (
-    planetResult.error ||
-    planetsResult.error ||
-    questionsResult.error ||
-    answersResult.error
-  ) {
-    showMessage(
-      $("answerMessage"),
-      "探索資料載入失敗。",
-      "error"
-    );
-    return;
+    questions = Array.isArray(data) ? data : [];
   }
 
-  planet = planetResult.data;
-  allPlanets = planetsResult.data;
-  questions = questionsResult.data;
+  // --------------------------------------------------
+  // 讀取已提交答案
+  // 不從公開 questions 讀取正確答案
+  // --------------------------------------------------
 
-  if (!planet.is_published) {
-    alert("這顆星球尚未開放。");
-    location.href = "levels.html";
-    return;
-  }
+  async function loadExistingAnswers() {
+    submittedResults = new Map();
 
-  answersResult.data.forEach((answer) => {
-    answerMap.set(answer.question_id, answer);
-  });
-
-  const previousPlanets =
-    allPlanets.filter(
-      (item) =>
-        item.planet_order < planet.planet_order
-    );
-
-  const unlocked =
-    previousPlanets.every((previous) => {
-      const previousQuestions =
-        allQuestionsResult.data.filter(
-          (question) =>
-            question.level_id === previous.id
+    for (const question of questions) {
+      try {
+        const { data, error } = await db.rpc(
+          "get_my_answer",
+          {
+            p_question_id: question.id
+          }
         );
 
-      return (
-        previousQuestions.length > 0 &&
-        previousQuestions.every(
-          (question) =>
-            answerMap.has(question.id)
-        )
+        if (error) {
+          /*
+            如果某道題沒有答案，不應該令整個頁面停止。
+          */
+          console.warn(
+            `讀取題目 ${question.id} 的作答紀錄失敗：`,
+            error.message
+          );
+          continue;
+        }
+
+        if (data) {
+          const result = unwrapRpcResult(data);
+          submittedResults.set(question.id, result);
+        }
+      } catch (error) {
+        console.warn(error);
+      }
+    }
+  }
+
+  // --------------------------------------------------
+  // 綁定按鈕
+  // --------------------------------------------------
+
+  function bindEvents() {
+    if (els.submitAnswer) {
+      els.submitAnswer.addEventListener(
+        "click",
+        submitCurrentAnswer
       );
-    });
+    }
 
-  if (!unlocked) {
-    alert("請先完成前面的星球。");
-    location.href = "levels.html";
-    return;
-  }
+    if (els.previousQuestion) {
+      els.previousQuestion.addEventListener(
+        "click",
+        showPreviousQuestion
+      );
+    }
 
-  $("planetCode").textContent =
-    `${planet.english_name} // ${planet.coordinates}`;
+    if (els.nextQuestion) {
+      els.nextQuestion.addEventListener(
+        "click",
+        showNextQuestion
+      );
+    }
 
-  $("planetName").textContent = planet.name;
-  $("playerName").textContent =
-    summary.display_name;
-
-  $("playerScore").textContent =
-    summary.score;
-
-  $("shipLevel").textContent =
-    `LV.${summary.ship_level}`;
-
-  const firstUnanswered =
-    questions.findIndex(
-      (question) =>
-        !answerMap.has(question.id)
-    );
-
-  activeIndex =
-    firstUnanswered >= 0
-      ? firstUnanswered
-      : 0;
-
-  renderNavigation();
-  await loadQuestion(activeIndex);
-}
-
-function renderNavigation() {
-  const navigation =
-    $("questionNavigation");
-
-  navigation.innerHTML = "";
-
-  questions.forEach((question, index) => {
-    const result =
-      answerMap.get(question.id);
-
-    const button =
-      document.createElement("button");
-
-    button.type = "button";
-
-    button.className =
-      "zone-nav" +
-      (index === activeIndex ? " active" : "") +
-      (result ? " answered" : "") +
-      (result?.is_correct ? " correct" : "") +
-      (result && !result.is_correct
-        ? " wrong"
-        : "");
-
-    button.innerHTML = `
-      <span>${index + 1}</span>
-      <div>
-        <strong>
-          ${escapeHTML(question.zone_name)}
-        </strong>
-        <small>
-          ${
-            result
-              ? result.is_correct
-                ? "區域完成・+5"
-                : "區域完成・+0"
-              : "等待探索"
+    if (els.answerInput) {
+      els.answerInput.addEventListener(
+        "keydown",
+        (event) => {
+          if (
+            event.key === "Enter" &&
+            !event.shiftKey
+          ) {
+            event.preventDefault();
+            submitCurrentAnswer();
           }
-        </small>
-      </div>
-    `;
-
-    button.addEventListener(
-      "click",
-      async () => {
-        activeIndex = index;
-        await loadQuestion(index);
-      }
-    );
-
-    navigation.appendChild(button);
-  });
-}
-
-async function loadQuestion(index) {
-  const question = questions[index];
-  if (!question) return;
-
-  activeIndex = index;
-  renderNavigation();
-
-  $("zoneName").textContent =
-    `探索區域 ${index + 1}：${question.zone_name}`;
-
-  $("questionTopic").textContent =
-    question.topic;
-
-  $("questionNumber").textContent =
-    `${index + 1} / ${questions.length}`;
-
-  $("questionTitle").textContent =
-    question.title;
-
-  $("questionText").textContent =
-    question.question_text;
-
-  $("hintText").textContent =
-    question.hint;
-
-  $("hintText").hidden = true;
-  $("showHint").textContent =
-    "啟動掃描提示";
-
-  $("answerInput").value = "";
-  $("answerInput").disabled = false;
-
-  $("submitAnswer").disabled = false;
-  $("submitAnswer").textContent =
-    "正式提交";
-
-  $("resultPanel").hidden = true;
-  showMessage($("answerMessage"), "");
-
-  $("previousQuestion").disabled =
-    index === 0;
-
-  $("nextQuestion").disabled =
-    index === questions.length - 1;
-
-  const existing =
-    answerMap.get(question.id);
-
-  if (existing) {
-    await showExistingResult(question.id);
-  }
-}
-
-async function showExistingResult(questionId) {
-  $("answerInput").disabled = true;
-  $("submitAnswer").disabled = true;
-  $("submitAnswer").textContent = "已提交";
-
-  const { data, error } =
-    await window.db.rpc(
-      "get_my_answer",
-      {
-        p_question_id: questionId
-      }
-    );
-
-  if (error) {
-    showMessage(
-      $("answerMessage"),
-      error.message,
-      "error"
-    );
-    return;
+        }
+      );
+    }
   }
 
-  if (data) {
-    displayResult(data);
-  }
-}
+  // --------------------------------------------------
+  // 顯示目前題目
+  // --------------------------------------------------
 
+  function renderQuestion() {
+    const question = questions[currentIndex];
+
+    if (!question) {
+      showCompleted();
+      return;
+    }
+
+    clearMessage();
+    clearResult();
+
+    setText(
+      els.questionNumber,
+      String(currentIndex + 1)
     );
 
-  if (error) {
-    showMessage(
-      $("answerMessage"),
-      error.message,
-      "error"
+    setText(
+      els.progressText,
+      `${currentIndex + 1} / ${questions.length}`
     );
-    return;
+
+    setText(
+      els.questionTitle,
+      question.title || `第 ${currentIndex + 1} 題`
+    );
+
+    setText(
+      els.questionText,
+      question.question_text || ""
+    );
+
+    setText(
+      els.hint,
+      question.hint || "暫無提示"
+    );
+
+    setText(
+      els.topic,
+      question.topic || question.dse_topic || ""
+    );
+
+    setText(
+      els.zoneName,
+      question.zone_name || ""
+    );
+
+    setText(
+      els.zoneDescription,
+      question.zone_description || ""
+    );
+
+    setText(
+      els.difficulty,
+      question.difficulty
+        ? `難度 ${question.difficulty}`
+        : ""
+    );
+
+    setText(
+      els.points,
+      `${question.points ?? 5} 分`
+    );
+
+    updateProgress();
+
+    if (els.answerInput) {
+      els.answerInput.value = "";
+      els.answerInput.disabled = false;
+    }
+
+    if (els.submitAnswer) {
+      els.submitAnswer.disabled = false;
+      els.submitAnswer.textContent = "提交答案";
+    }
+
+    const previousResult =
+      submittedResults.get(question.id);
+
+    if (previousResult) {
+      showExistingResult(previousResult);
+    }
   }
 
-  if (data) displayResult(data);
-}
+  // --------------------------------------------------
+  // 顯示進度
+  // --------------------------------------------------
 
-function displayResult(result) {
-  $("resultPanel").hidden = false;
+  function updateProgress() {
+    if (!els.progress) {
+      return;
+    }
 
-  $("resultPanel").className =
-    `result-panel ${
-      result.is_correct ? "correct" : "wrong"
-    }`;
+    const percentage =
+      questions.length === 0
+        ? 0
+        : ((currentIndex + 1) / questions.length) * 100;
 
-  $("resultTitle").textContent =
-    result.is_correct
-      ? "答案驗證成功・能量增加"
-      : "答案已記錄・查看分析";
+    if (
+      els.progress.tagName === "PROGRESS"
+    ) {
+      els.progress.max = 100;
+      els.progress.value = percentage;
+    } else {
+      els.progress.style.width =
+        `${percentage}%`;
+    }
+  }
 
-  $("submittedAnswer").textContent =
-    result.submitted_answer;
+  // --------------------------------------------------
+  // 提交答案
+  // --------------------------------------------------
 
-  $("correctAnswer").textContent =
-    result.correct_answer;
+  async function submitCurrentAnswer() {
+    const question = questions[currentIndex];
 
-  $("awardedPoints").textContent =
-    `${result.points_awarded} / 5`;
+    if (!question) {
+      return;
+    }
 
-  $("solutionText").innerHTML =
-    result.solution;
+    if (submittedResults.has(question.id)) {
+      showExistingResult(
+        submittedResults.get(question.id)
+      );
+      return;
+    }
 
-  $("answerInput").value =
-    result.submitted_answer;
+    const rawAnswer =
+      els.answerInput?.value?.trim() || "";
 
-  $("answerInput").disabled = true;
-  $("submitAnswer").disabled = true;
-  $("submitAnswer").textContent = "已提交";
-}
-
-$("submitAnswer").addEventListener(
-  "click",
-  () => {
-    const answer =
-      $("answerInput").value.trim();
-
-    if (!answer) {
+    if (!rawAnswer) {
       showMessage(
-        $("answerMessage"),
         "請先輸入答案。",
         "error"
       );
+      els.answerInput?.focus();
       return;
     }
 
-    pendingAnswer = answer;
-    $("confirmDialog").hidden = false;
-  }
-);
+    setSubmitState(true);
+    clearMessage();
+    clearResult();
 
-$("cancelSubmit").addEventListener(
-  "click",
-  () => {
-    $("confirmDialog").hidden = true;
-    pendingAnswer = "";
-  }
-);
-
-$("confirmSubmit").addEventListener(
-  "click",
-  async () => {
-    const question = questions[activeIndex];
-
-    $("confirmSubmit").disabled = true;
-    $("confirmSubmit").textContent =
-      "傳送中...";
-
-    const { data, error } =
-      await window.db.rpc(
+    try {
+      const { data, error } = await db.rpc(
         "submit_answer",
         {
           p_question_id: question.id,
-          p_answer: pendingAnswer
+          p_answer: rawAnswer
         }
       );
 
-    $("confirmSubmit").disabled = false;
-    $("confirmSubmit").textContent =
-      "確定提交";
+      if (error) {
+        throw error;
+      }
 
-    $("confirmDialog").hidden = true;
-    pendingAnswer = "";
+      const result = unwrapRpcResult(data);
 
-    if (error) {
+      submittedResults.set(
+        question.id,
+        result
+      );
+
+      showResult(result);
+
+    } catch (error) {
+      console.error(error);
+
+      /*
+        如果資料庫函式使用 answer 而不是 p_answer，
+        請把上面的參數改成：
+
+        {
+          p_question_id: question.id,
+          answer: rawAnswer
+        }
+      */
+
       showMessage(
-        $("answerMessage"),
-        error.message,
+        error?.message ||
+        "提交答案時發生錯誤。",
         "error"
       );
+
+      setSubmitState(false);
+    }
+  }
+
+  // --------------------------------------------------
+  // 顯示已提交結果
+  // --------------------------------------------------
+
+  function showExistingResult(result) {
+    if (!result) {
       return;
     }
 
-    answerMap.set(question.id, {
-      question_id: question.id,
-      is_correct: data.is_correct,
-      points_awarded: data.points_awarded
-    });
+    if (els.answerInput) {
+      els.answerInput.value =
+        result.submitted_answer || "";
+      els.answerInput.disabled = true;
+    }
 
-    $("playerScore").textContent =
-      data.total_score;
+    if (els.submitAnswer) {
+      els.submitAnswer.disabled = true;
+      els.submitAnswer.textContent = "已提交";
+    }
 
-    $("shipLevel").textContent =
-      `LV.${data.ship_level}`;
+    showResult(result);
+  }
 
-    displayResult(data);
-    renderNavigation();
+  function showResult(result) {
+    const isCorrect =
+      result.is_correct === true ||
+      result.correct === true;
+
+    const points =
+      result.points_awarded ??
+      result.points ??
+      (isCorrect ? 5 : 0);
+
+    const awardedXp =
+      result.xp_awarded ??
+      result.xp ??
+      0;
+
+    if (isCorrect) {
+      showMessage(
+        `答對了！獲得 ${points} 分。`,
+        "success"
+      );
+    } else {
+      showMessage(
+        "答案不正確，請查看下面的解題步驟。",
+        "error"
+      );
+    }
+
+    setText(
+      els.correctAnswer,
+      result.correct_answer ||
+      result.answer ||
+      ""
+    );
+
+    setText(
+      els.score,
+      `${points} 分`
+    );
+
+    if (awardedXp > 0) {
+      setText(
+        els.xp,
+        `+${awardedXp} XP`
+      );
+    }
+
+    if (els.solution) {
+      /*
+        solution 是由資料庫管理員輸入的受信任內容。
+        如果將來允許普通使用者輸入 solution，
+        不應直接使用 innerHTML。
+      */
+      els.solution.innerHTML =
+        result.solution ||
+        result.explanation ||
+        "<p>暫無解題步驟。</p>";
+    }
+  }
+
+  // --------------------------------------------------
+  // 上一題、下一題
+  // --------------------------------------------------
+
+  function showPreviousQuestion() {
+    if (currentIndex <= 0) {
+      return;
+    }
+
+    currentIndex -= 1;
+    renderQuestion();
+  }
+
+  function showNextQuestion() {
+    if (currentIndex >= questions.length - 1) {
+      showCompleted();
+      return;
+    }
+
+    currentIndex += 1;
+    renderQuestion();
+  }
+
+  function showCompleted() {
+    if (els.completedMessage) {
+      els.completedMessage.hidden = false;
+      els.completedMessage.textContent =
+        "你已完成這個星球的所有題目！";
+    }
+
+    if (els.questionTitle) {
+      els.questionTitle.textContent =
+        "星球任務完成";
+    }
+
+    if (els.questionText) {
+      els.questionText.textContent =
+        "恭喜你完成本星球的全部題目。";
+    }
+
+    if (els.answerInput) {
+      els.answerInput.disabled = true;
+    }
+
+    if (els.submitAnswer) {
+      els.submitAnswer.disabled = true;
+    }
 
     showMessage(
-      $("answerMessage"),
-      data.is_correct
-        ? `驗證成功！+${data.points_awarded} 分，飛船 +${data.xp_awarded} XP。`
-        : `答案不正確，飛船仍獲得 ${data.xp_awarded} XP。`,
-      data.is_correct ? "success" : "error"
+      "本星球任務完成！",
+      "success"
     );
+  }
 
-    playTone(
-      data.is_correct ? 780 : 220,
-      0.16,
-      data.is_correct ? "square" : "sawtooth"
-    );
+  // --------------------------------------------------
+  // 輸入及顯示狀態
+  // --------------------------------------------------
 
-    if (data.planet_completed) {
-      showPlanetClear(data);
+  function setSubmitState(isSubmitting) {
+    if (!els.submitAnswer) {
+      return;
+    }
+
+    els.submitAnswer.disabled = isSubmitting;
+
+    els.submitAnswer.textContent =
+      isSubmitting
+        ? "提交中..."
+        : "提交答案";
+
+    if (els.answerInput) {
+      els.answerInput.disabled =
+        isSubmitting;
     }
   }
-);
 
-function showPlanetClear(data) {
-  $("clearPlanetName").textContent =
-    `${data.planet_name}探索完成！`;
+  function showLoading(isLoading) {
+    if (!els.loading) {
+      return;
+    }
 
-  $("clearScore").textContent =
-    `${data.planet_score} / ${
-      questions.reduce(
-        (sum, question) =>
-          sum + Number(question.points),
-        0
-      )
-    }`;
-
-  $("clearLevel").textContent =
-    `LV.${data.ship_level}`;
-
-  const currentIndex =
-    allPlanets.findIndex(
-      (item) => item.id === planet.id
-    );
-
-  const nextPlanet =
-    allPlanets[currentIndex + 1];
-
-  const nextButton =
-    $("goNextPlanet");
-
-  if (nextPlanet) {
-    nextButton.textContent =
-      `前往 ${nextPlanet.name}`;
-
-    nextButton.onclick = () => {
-      location.href =
-        `practice.html?level=${nextPlanet.id}`;
-    };
-  } else {
-    nextButton.textContent =
-      "查看探索者排行榜";
-
-    nextButton.onclick = () => {
-      location.href = "leaderboard.html";
-    };
+    els.loading.hidden = !isLoading;
   }
 
-  setTimeout(() => {
-    $("planetClearModal").hidden = false;
-    playTone(880, 0.3, "square");
-  }, 500);
-}
+  function clearResult() {
+    setText(els.correctAnswer, "");
+    setText(els.score, "");
+    setText(els.xp, "");
 
-$("showHint").addEventListener(
-  "click",
-  () => {
-    $("hintText").hidden =
-      !$("hintText").hidden;
-
-    $("showHint").textContent =
-      $("hintText").hidden
-        ? "啟動掃描提示"
-        : "關閉掃描提示";
-  }
-);
-
-$("previousQuestion").addEventListener(
-  "click",
-  async () => {
-    if (activeIndex <= 0) return;
-    await loadQuestion(--activeIndex);
-  }
-);
-
-$("nextQuestion").addEventListener(
-  "click",
-  async () => {
-    if (
-      activeIndex >= questions.length - 1
-    ) return;
-
-    await loadQuestion(++activeIndex);
-  }
-);
-
-$("answerInput").addEventListener(
-  "keydown",
-  (event) => {
-    if (
-      event.key === "Enter" &&
-      !$("submitAnswer").disabled
-    ) {
-      $("submitAnswer").click();
+    if (els.solution) {
+      els.solution.innerHTML = "";
     }
   }
-);
 
-initialisePractice();
+  function clearMessage() {
+    showMessage("", "");
+  }
+
+  function showMessage(message, type) {
+    if (!els.answerMessage) {
+      return;
+    }
+
+    els.answerMessage.textContent = message;
+    els.answerMessage.className = "";
+
+    if (type) {
+      els.answerMessage.classList.add(
+        `message-${type}`
+      );
+    }
+
+    els.answerMessage.hidden =
+      !message;
+  }
+
+  function setText(element, value) {
+    if (!element) {
+      return;
+    }
+
+    element.textContent =
+      value === null ||
+      value === undefined
+        ? ""
+        : String(value);
+  }
+
+  function unwrapRpcResult(data) {
+    if (Array.isArray(data)) {
+      return data[0] || null;
+    }
+
+    return data || null;
+  }
+})();
