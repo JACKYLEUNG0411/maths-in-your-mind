@@ -5,38 +5,48 @@ const baseCheckAnswer =
   document.getElementById("checkAnswer");
 
 function updateChallengeProgress() {
-  const count = done.size;
-  const cleared = count === questions.length;
-  const score = count * 5;
+  const question =
+    questions[active];
 
-  const headerProgress =
-    document.getElementById("headerProgress");
+  const levelId =
+    question.level;
 
-  const streak =
-    document.getElementById("streak");
+  const levelIndexes =
+    getLevelQuestionIndexes(levelId);
 
-  const levelOneLine =
-    document.getElementById("levelOneLine");
+  const levelDone =
+    levelIndexes.filter((index) =>
+      done.has(index)
+    ).length;
 
-  const scoreElement =
-    document.getElementById("score");
+  const levelCleared =
+    levelDone === 5;
 
-  if (headerProgress) {
-    headerProgress.textContent =
-      `${count} / ${questions.length}`;
+  const allCleared =
+    done.size === questions.length;
+
+  if (document.getElementById("headerProgress")) {
+    document.getElementById(
+      "headerProgress"
+    ).textContent =
+      `${levelDone} / 5`;
   }
 
-  if (streak) {
-    streak.textContent = cleared ? "1" : "0";
+  if (document.getElementById("streak")) {
+    document.getElementById("streak").textContent =
+      allCleared ? "1" : "0";
   }
 
-  if (levelOneLine) {
-    levelOneLine.style.width =
-      `${(count / questions.length) * 100}%`;
+  if (document.getElementById("levelOneLine")) {
+    document.getElementById(
+      "levelOneLine"
+    ).style.width =
+      `${(levelDone / 5) * 100}%`;
   }
 
-  if (scoreElement) {
-    scoreElement.textContent = score;
+  if (document.getElementById("score")) {
+    document.getElementById("score").textContent =
+      done.size * 5;
   }
 
   const topicCount =
@@ -44,40 +54,73 @@ function updateChallengeProgress() {
       ".current-level .topic-count"
     );
 
-  if (topicCount && cleared) {
-    topicCount.textContent = "✓ 已完成";
+  if (topicCount) {
+    topicCount.textContent =
+      levelCleared
+        ? "✓ 已完成"
+        : "5 題挑戰";
   }
 }
 
+
 function showCelebration() {
-  const lastQuestion =
+  const question =
+    questions[active];
+
+  const levelId =
+    question.level;
+
+  const levelIndexes =
+    getLevelQuestionIndexes(levelId);
+
+  const levelCleared =
+    levelIndexes.every((index) =>
+      done.has(index)
+    );
+
+  const allCleared =
     done.size === questions.length;
 
   const title =
-    document.getElementById("celebrationTitle");
+    document.getElementById(
+      "celebrationTitle"
+    );
 
   const text =
-    document.getElementById("celebrationText");
+    document.getElementById(
+      "celebrationText"
+    );
 
   const nextButton =
-    document.getElementById("celebrationNext");
+    document.getElementById(
+      "celebrationNext"
+    );
 
   if (title) {
-    title.textContent = lastQuestion
-      ? "第一關完成！"
-      : "太厲害了！";
+    title.textContent =
+      allCleared
+        ? "全部關卡完成！"
+        : levelCleared
+          ? `第 ${levelId} 關完成！`
+          : "答對了！";
   }
 
   if (text) {
-    text.textContent = lastQuestion
-      ? "你成功完成 5 題挑戰，代數起步關卡已通關！"
-      : "你又攻下一題，繼續保持這個節奏。";
+    text.textContent =
+      allCleared
+        ? "你成功完成全部 20 題挑戰！"
+        : levelCleared
+          ? `你已完成「${questions[active].levelName}」，下一關已解鎖！`
+          : "你又攻下一題，繼續保持這個節奏。";
   }
 
   if (nextButton) {
-    nextButton.textContent = lastQuestion
-      ? "查看關卡地圖 →"
-      : "挑戰下一題 →";
+    nextButton.textContent =
+      allCleared
+        ? "查看排行榜 →"
+        : levelCleared
+          ? "挑戰下一關 →"
+          : "挑戰下一題 →";
   }
 
   if (celebration) {
@@ -89,53 +132,66 @@ function showCelebration() {
   }
 }
 
+
 if (baseCheckAnswer) {
   baseCheckAnswer.onclick = () => {
-    const question = questions[active];
+    const question =
+      questions[active];
 
-    const answerInput =
+    const answerElement =
       document.getElementById("answer");
-
-    const value = clean(answerInput.value);
-
-    const valid = [
-      question.answer,
-      ...(question.accepted || [])
-    ]
-      .map(clean)
-      .includes(value);
 
     const feedback =
       document.getElementById("feedback");
 
+    const value =
+      clean(answerElement.value);
+
+    const validAnswers = [
+      question.answer,
+      ...(question.accepted || [])
+    ];
+
+    const valid =
+      validAnswers
+        .map(clean)
+        .includes(value);
+
     if (!value) {
       feedback.textContent =
         "先輸入你的答案吧。";
+
       feedback.className =
         "feedback wrong";
+
       return;
     }
 
     if (!valid) {
       feedback.textContent =
         "差一點點，再看看提示，慢慢來。";
+
       feedback.className =
         "feedback wrong";
+
       return;
     }
 
-    const isNew = !done.has(active);
+    const isNew =
+      !done.has(active);
 
     done.add(active);
 
-    feedback.textContent = isNew
-      ? "答對了！+5 分"
-      : "這一題已經完成，不會重複加分。";
+    feedback.textContent =
+      isNew
+        ? "答對了！+5 分"
+        : "這一題已經完成。";
 
     feedback.className =
       "feedback correct";
 
     renderList();
+    updateProgress();
     updateChallengeProgress();
 
     if (isNew) {
@@ -144,44 +200,79 @@ if (baseCheckAnswer) {
   };
 }
 
+
 const celebrationNext =
-  document.getElementById("celebrationNext");
+  document.getElementById(
+    "celebrationNext"
+  );
 
 if (celebrationNext) {
   celebrationNext.onclick = () => {
-    const cleared =
+    const currentQuestion =
+      questions[active];
+
+    const currentLevel =
+      currentQuestion.level;
+
+    const currentLevelIndexes =
+      getLevelQuestionIndexes(currentLevel);
+
+    const currentLevelDone =
+      currentLevelIndexes.every((index) =>
+        done.has(index)
+      );
+
+    const allCleared =
       done.size === questions.length;
 
-    if (celebration) {
-      celebration.classList.remove("visible");
-      celebration.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-    }
+    celebration.classList.remove(
+      "visible"
+    );
 
-    if (cleared) {
-      location.hash = "topics";
+    celebration.setAttribute(
+      "aria-hidden",
+      "true"
+    );
+
+    if (allCleared) {
+      location.hash = "leaderboard";
       return;
     }
 
-    const next =
-      questions.findIndex(
-        (_, index) => !done.has(index)
+    if (currentLevelDone) {
+      const nextLevel =
+        levels.find(
+          (level) =>
+            level.id === currentLevel + 1
+        );
+
+      if (nextLevel) {
+        load(
+          getLevelStart(nextLevel.id)
+        );
+
+        document
+          .getElementById("answer")
+          ?.focus();
+
+        return;
+      }
+    }
+
+    const nextQuestion =
+      currentLevelIndexes.find(
+        (index) => !done.has(index)
       );
 
-    if (next >= 0) {
-      load(next);
+    if (nextQuestion !== undefined) {
+      load(nextQuestion);
 
-      const answerInput =
-        document.getElementById("answer");
-
-      if (answerInput) {
-        answerInput.focus();
-      }
+      document
+        .getElementById("answer")
+        ?.focus();
     }
   };
 }
 
-updateChallengeProgress();
 
+updateChallengeProgress();
