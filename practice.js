@@ -274,6 +274,22 @@ async function showExistingResult(questionId) {
     return;
   }
 
+  if (data) {
+    displayResult(data);
+  }
+}
+
+    );
+
+  if (error) {
+    showMessage(
+      $("answerMessage"),
+      error.message,
+      "error"
+    );
+    return;
+  }
+
   if (data) displayResult(data);
 }
 
