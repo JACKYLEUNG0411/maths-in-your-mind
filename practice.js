@@ -1,34 +1,18 @@
-/*
-  practice.js
-  Maths in Your Mind
-*/
-
 (() => {
   "use strict";
 
-  /*
-    必須先在 config.js 建立：
-
-    window.db = window.supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
-  */
-
   const db = window.db;
 
-  if (!db) {
-    console.error("window.db 不存在，請先檢查 config.js");
-    return;
-  }
+  let currentUser = null;
+  let currentLevel = null;
+  let questions = [];
+  let currentIndex = 0;
 
-  // --------------------------------------------------
-  // 基本工具
-  // --------------------------------------------------
+  const submittedResults = new Map();
 
-  const $ = (id) => document.getElementById(id);
-
-  const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(
+    window.location.search
+  );
 
   const levelId = Number(
     params.get("level_id") ||
@@ -37,170 +21,87 @@
     1
   );
 
-  let currentUser = null;
-  let level = null;
-  let questions = [];
-  let currentIndex = 0;
-  let submittedResults = new Map();
-
-  // --------------------------------------------------
-  // DOM 元素
-  // 支援不同命名方式，避免 HTML 少一個欄位時整頁停止
-  // --------------------------------------------------
-
-  const els = {
-    levelName:
-      $("levelName") ||
-      $("planetName") ||
-      $("levelTitle"),
-
-    levelDescription:
-      $("levelDescription") ||
-      $("planetDescription"),
-
-    progress:
-      $("progress") ||
-      $("questionProgress"),
-
-    progressText:
-      $("progressText") ||
-      $("questionProgressText"),
-
-    questionNumber:
-      $("questionNumber") ||
-      $("currentQuestionNumber"),
-
-    questionTitle:
-      $("questionTitle") ||
-      $("questionTitleText"),
-
-    questionText:
-      $("questionText") ||
-      $("questionBody"),
-
-    hint:
-      $("hint") ||
-      $("hintText") ||
-      $("questionHint"),
-
-    topic:
-      $("topic") ||
-      $("questionTopic"),
-
-    zoneName:
-      $("zoneName") ||
-      $("areaName"),
-
-    zoneDescription:
-      $("zoneDescription") ||
-      $("areaDescription"),
-
-    difficulty:
-      $("difficulty") ||
-      $("difficultyText"),
-
-    points:
-      $("points") ||
-      $("questionPoints"),
-
-    answerInput:
-      $("answerInput") ||
-      $("answer"),
-
-    submitAnswer:
-      $("submitAnswer") ||
-      $("submitBtn"),
-
-    previousQuestion:
-      $("previousQuestion") ||
-      $("prevQuestion") ||
-      $("prevBtn"),
-
-    nextQuestion:
-      $("nextQuestion") ||
-      $("nextBtn"),
-
-    answerMessage:
-      $("answerMessage") ||
-      $("resultMessage") ||
-      $("feedback"),
-
-    solution:
-      $("solution") ||
-      $("solutionText") ||
-      $("explanation"),
-
-    correctAnswer:
-      $("correctAnswer") ||
-      $("answerResult"),
-
-    score:
-      $("score") ||
-      $("questionScore"),
-
-    xp:
-      $("xp") ||
-      $("questionXP"),
-
-    completedMessage:
-      $("completedMessage") ||
-      $("levelCompleted"),
-
-    loading:
-      $("loading") ||
-      $("loadingMessage")
+  const $ = (id) => {
+    return document.getElementById(id);
   };
 
-  // --------------------------------------------------
-  // 頁面初始化
-  // --------------------------------------------------
+  const elements = {
+    levelName: $("levelName"),
+    levelDescription: $("levelDescription"),
 
-  document.addEventListener("DOMContentLoaded", init);
+    progress: $("progress"),
+    progressText: $("progressText"),
+
+    questionNumber: $("questionNumber"),
+    questionTitle: $("questionTitle"),
+    questionText: $("questionText"),
+
+    hintText: $("hintText"),
+    topic: $("topic"),
+    zoneName: $("zoneName"),
+    zoneDescription: $("zoneDescription"),
+    difficulty: $("difficulty"),
+    points: $("points"),
+
+    answerInput: $("answerInput"),
+    submitAnswer: $("submitAnswer"),
+
+    previousQuestion: $("previousQuestion"),
+    nextQuestion: $("nextQuestion"),
+
+    answerMessage: $("answerMessage"),
+    correctAnswer: $("correctAnswer"),
+    score: $("score"),
+    xp: $("xp"),
+    solutionText: $("solutionText"),
+
+    loading: $("loading"),
+    completedMessage: $("completedMessage")
+  };
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
   async function init() {
     try {
       showLoading(true);
-      clearMessage();
 
-      if (!Number.isInteger(levelId) || levelId <= 0) {
-        throw new Error("找不到有效的星球 ID。");
+      if (!db) {
+        throw new Error(
+          "找不到 Supabase 設定，請檢查 config.js。"
+        );
       }
 
-      const {
-        data: sessionData,
-        error: sessionError
-      } = await db.auth.getSession();
-
-      if (sessionError) {
-        throw sessionError;
+      if (
+        !Number.isInteger(levelId) ||
+        levelId <= 0
+      ) {
+        throw new Error(
+          "網址沒有有效的 level_id。"
+        );
       }
 
-      currentUser = sessionData?.session?.user || null;
-
-      if (!currentUser) {
-        showMessage("請先登入，才能開始答題。", "error");
-
-        setTimeout(() => {
-          window.location.href = "login.html";
-        }, 1200);
-
-        return;
-      }
-
+      bindEvents();
+      await checkLogin();
       await loadLevel();
       await loadQuestions();
-      await loadExistingAnswers();
-      bindEvents();
+      await loadSubmittedAnswers();
 
       if (questions.length === 0) {
-        throw new Error("這個星球目前沒有題目。");
+        throw new Error(
+          "這個星球目前沒有題目。"
+        );
       }
 
       renderQuestion();
     } catch (error) {
       console.error(error);
+
       showMessage(
-        error?.message || "載入題目時發生錯誤。",
+        error.message ||
+        "載入練習頁面時發生錯誤。",
         "error"
       );
     } finally {
@@ -208,12 +109,39 @@
     }
   }
 
-  // --------------------------------------------------
-  // 讀取星球
-  // --------------------------------------------------
+  async function checkLogin() {
+    const {
+      data,
+      error
+    } = await db.auth.getSession();
+
+    if (error) {
+      throw error;
+    }
+
+    currentUser =
+      data?.session?.user || null;
+
+    if (!currentUser) {
+      showMessage(
+        "請先登入才能開始答題。",
+        "error"
+      );
+
+      setTimeout(() => {
+        window.location.href =
+          "login.html";
+      }, 1200);
+
+      throw new Error("尚未登入。");
+    }
+  }
 
   async function loadLevel() {
-    const { data, error } = await db
+    const {
+      data,
+      error
+    } = await db
       .from("levels")
       .select("*")
       .eq("id", levelId)
@@ -224,24 +152,29 @@
     }
 
     if (!data) {
-      throw new Error("找不到這個星球。");
+      throw new Error(
+        `找不到 level_id = ${levelId} 的星球。`
+      );
     }
 
-    level = data;
+    currentLevel = data;
 
-    setText(els.levelName, data.name || "未命名星球");
     setText(
-      els.levelDescription,
+      elements.levelName,
+      data.name || "未命名星球"
+    );
+
+    setText(
+      elements.levelDescription,
       data.description || ""
     );
   }
 
-  // --------------------------------------------------
-  // 讀取題目
-  // --------------------------------------------------
-
   async function loadQuestions() {
-    const { data, error } = await db
+    const {
+      data,
+      error
+    } = await db
       .from("questions")
       .select(`
         id,
@@ -269,20 +202,20 @@
       throw error;
     }
 
-    questions = Array.isArray(data) ? data : [];
+    questions = Array.isArray(data)
+      ? data
+      : [];
   }
 
-  // --------------------------------------------------
-  // 讀取已提交答案
-  // 不從公開 questions 讀取正確答案
-  // --------------------------------------------------
-
-  async function loadExistingAnswers() {
-    submittedResults = new Map();
+  async function loadSubmittedAnswers() {
+    submittedResults.clear();
 
     for (const question of questions) {
       try {
-        const { data, error } = await db.rpc(
+        const {
+          data,
+          error
+        } = await db.rpc(
           "get_my_answer",
           {
             p_question_id: question.id
@@ -290,19 +223,21 @@
         );
 
         if (error) {
-          /*
-            如果某道題沒有答案，不應該令整個頁面停止。
-          */
           console.warn(
-            `讀取題目 ${question.id} 的作答紀錄失敗：`,
+            `讀取題目 ${question.id} 的答案紀錄失敗：`,
             error.message
           );
           continue;
         }
 
-        if (data) {
-          const result = unwrapRpcResult(data);
-          submittedResults.set(question.id, result);
+        const result =
+          unwrapRpcResult(data);
+
+        if (result) {
+          submittedResults.set(
+            question.id,
+            result
+          );
         }
       } catch (error) {
         console.warn(error);
@@ -310,54 +245,39 @@
     }
   }
 
-  // --------------------------------------------------
-  // 綁定按鈕
-  // --------------------------------------------------
-
   function bindEvents() {
-    if (els.submitAnswer) {
-      els.submitAnswer.addEventListener(
-        "click",
-        submitCurrentAnswer
-      );
-    }
+    elements.submitAnswer?.addEventListener(
+      "click",
+      submitCurrentAnswer
+    );
 
-    if (els.previousQuestion) {
-      els.previousQuestion.addEventListener(
-        "click",
-        showPreviousQuestion
-      );
-    }
+    elements.previousQuestion?.addEventListener(
+      "click",
+      showPreviousQuestion
+    );
 
-    if (els.nextQuestion) {
-      els.nextQuestion.addEventListener(
-        "click",
-        showNextQuestion
-      );
-    }
+    elements.nextQuestion?.addEventListener(
+      "click",
+      showNextQuestion
+    );
 
-    if (els.answerInput) {
-      els.answerInput.addEventListener(
-        "keydown",
-        (event) => {
-          if (
-            event.key === "Enter" &&
-            !event.shiftKey
-          ) {
-            event.preventDefault();
-            submitCurrentAnswer();
-          }
+    elements.answerInput?.addEventListener(
+      "keydown",
+      (event) => {
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey
+        ) {
+          event.preventDefault();
+          submitCurrentAnswer();
         }
-      );
-    }
+      }
+    );
   }
 
-  // --------------------------------------------------
-  // 顯示目前題目
-  // --------------------------------------------------
-
   function renderQuestion() {
-    const question = questions[currentIndex];
+    const question =
+      questions[currentIndex];
 
     if (!question) {
       showCompleted();
@@ -368,68 +288,73 @@
     clearResult();
 
     setText(
-      els.questionNumber,
-      String(currentIndex + 1)
+      elements.questionNumber,
+      `第 ${currentIndex + 1} 題`
     );
 
     setText(
-      els.progressText,
+      elements.progressText,
       `${currentIndex + 1} / ${questions.length}`
     );
 
     setText(
-      els.questionTitle,
-      question.title || `第 ${currentIndex + 1} 題`
+      elements.questionTitle,
+      question.title ||
+      `第 ${currentIndex + 1} 題`
     );
 
     setText(
-      els.questionText,
+      elements.questionText,
       question.question_text || ""
     );
 
     setText(
-      els.hint,
+      elements.hintText,
       question.hint || "暫無提示"
     );
 
     setText(
-      els.topic,
-      question.topic || question.dse_topic || ""
+      elements.topic,
+      question.topic ||
+      question.dse_topic ||
+      ""
     );
 
     setText(
-      els.zoneName,
+      elements.zoneName,
       question.zone_name || ""
     );
 
     setText(
-      els.zoneDescription,
+      elements.zoneDescription,
       question.zone_description || ""
     );
 
     setText(
-      els.difficulty,
+      elements.difficulty,
       question.difficulty
         ? `難度 ${question.difficulty}`
         : ""
     );
 
     setText(
-      els.points,
+      elements.points,
       `${question.points ?? 5} 分`
     );
 
+    if (elements.answerInput) {
+      elements.answerInput.value = "";
+      elements.answerInput.disabled = false;
+    }
+
+    if (elements.submitAnswer) {
+      elements.submitAnswer.disabled = false;
+      elements.submitAnswer.textContent =
+        "提交答案";
+    }
+
     updateProgress();
-
-    if (els.answerInput) {
-      els.answerInput.value = "";
-      els.answerInput.disabled = false;
-    }
-
-    if (els.submitAnswer) {
-      els.submitAnswer.disabled = false;
-      els.submitAnswer.textContent = "提交答案";
-    }
+    updateNavigation();
 
     const previousResult =
       submittedResults.get(question.id);
@@ -439,71 +364,75 @@
     }
   }
 
-  // --------------------------------------------------
-  // 顯示進度
-  // --------------------------------------------------
-
   function updateProgress() {
-    if (!els.progress) {
+    if (!elements.progress) {
       return;
     }
 
     const percentage =
-      questions.length === 0
-        ? 0
-        : ((currentIndex + 1) / questions.length) * 100;
+      ((currentIndex + 1) /
+        questions.length) *
+      100;
 
-    if (
-      els.progress.tagName === "PROGRESS"
-    ) {
-      els.progress.max = 100;
-      els.progress.value = percentage;
-    } else {
-      els.progress.style.width =
-        `${percentage}%`;
+    elements.progress.style.width =
+      `${percentage}%`;
+  }
+
+  function updateNavigation() {
+    if (elements.previousQuestion) {
+      elements.previousQuestion.disabled =
+        currentIndex <= 0;
+    }
+
+    if (elements.nextQuestion) {
+      elements.nextQuestion.disabled =
+        currentIndex >= questions.length - 1;
     }
   }
 
-  // --------------------------------------------------
-  // 提交答案
-  // --------------------------------------------------
-
   async function submitCurrentAnswer() {
-    const question = questions[currentIndex];
+    const question =
+      questions[currentIndex];
 
     if (!question) {
       return;
     }
 
-    if (submittedResults.has(question.id)) {
+    if (
+      submittedResults.has(question.id)
+    ) {
       showExistingResult(
         submittedResults.get(question.id)
       );
       return;
     }
 
-    const rawAnswer =
-      els.answerInput?.value?.trim() || "";
+    const answer =
+      elements.answerInput?.value.trim() || "";
 
-    if (!rawAnswer) {
+    if (!answer) {
       showMessage(
         "請先輸入答案。",
         "error"
       );
-      els.answerInput?.focus();
+
+      elements.answerInput?.focus();
       return;
     }
 
-    setSubmitState(true);
+    setSubmitting(true);
     clearMessage();
     clearResult();
 
     try {
-      const { data, error } = await db.rpc(
+      const {
+        data,
+        error
+      } = await db.rpc(
         "submit_answer",
         {
           p_question_id: question.id,
-          p_answer: rawAnswer
+          p_answer: answer
         }
       );
 
@@ -511,7 +440,12 @@
         throw error;
       }
 
-      const result = unwrapRpcResult(data);
+      const result =
+        unwrapRpcResult(data) || {
+          submitted_answer: answer,
+          is_correct: false,
+          points_awarded: 0
+        };
 
       submittedResults.set(
         question.id,
@@ -519,130 +453,90 @@
       );
 
       showResult(result);
-
     } catch (error) {
       console.error(error);
 
-      /*
-        如果資料庫函式使用 answer 而不是 p_answer，
-        請把上面的參數改成：
-
-        {
-          p_question_id: question.id,
-          answer: rawAnswer
-        }
-      */
+      setSubmitting(false);
 
       showMessage(
-        error?.message ||
+        error.message ||
         "提交答案時發生錯誤。",
         "error"
       );
-
-      setSubmitState(false);
     }
   }
 
-  // --------------------------------------------------
-  // 顯示已提交結果
-  // --------------------------------------------------
-
   function showExistingResult(result) {
-    if (!result) {
-      return;
-    }
-
-    if (els.answerInput) {
-      els.answerInput.value =
+    if (elements.answerInput) {
+      elements.answerInput.value =
         result.submitted_answer || "";
-      els.answerInput.disabled = true;
+      elements.answerInput.disabled = true;
     }
 
-    if (els.submitAnswer) {
-      els.submitAnswer.disabled = true;
-      els.submitAnswer.textContent = "已提交";
+    if (elements.submitAnswer) {
+      elements.submitAnswer.disabled = true;
+      elements.submitAnswer.textContent =
+        "已提交";
     }
 
     showResult(result);
   }
 
- function showResult(result) {
-  const isCorrect =
-    result.is_correct === true ||
-    result.correct === true;
+  function showResult(result) {
+    const isCorrect =
+      result.is_correct === true ||
+      result.correct === true;
 
-  const points =
-    result.points_awarded ??
-    result.points ??
-    (isCorrect ? 5 : 0);
+    const points =
+      result.points_awarded ??
+      result.points ??
+      (isCorrect ? 5 : 0);
 
-  const xp =
-    result.xp_awarded ??
-    result.xp ??
-    0;
+    const xp =
+      result.xp_awarded ??
+      result.xp ??
+      0;
 
-  if (isCorrect) {
-    showMessage(
-      `答對了！獲得 ${points} 分。`,
-      "success"
-    );
-  } else {
-    showMessage(
-      "答案不正確，請查看解題步驟。",
-      "error"
-    );
-  }
+    if (isCorrect) {
+      showMessage(
+        `答對了！獲得 ${points} 分。`,
+        "success"
+      );
+    } else {
+      showMessage(
+        "答案不正確，請查看解題步驟。",
+        "error"
+      );
+    }
 
-  /*
-    正確答案使用 textContent，
-    避免答案內容被當成 HTML 執行。
-    CSS 會自動為它加上綠色 Highlight 方框。
-  */
-  setText(
-    elements.correctAnswer,
-    result.correct_answer ||
-    result.answer ||
-    "暫無資料"
-  );
-
-  setText(
-    elements.score,
-    `${points} 分`
-  );
-
-  setText(
-    elements.xp,
-    xp ? `+${xp} XP` : ""
-  );
-
-  if (elements.solutionText) {
     /*
-      solution 由資料庫提供，保留 HTML 解題格式。
+      正確答案使用 textContent，
+      CSS 會替它加上醒目的綠色方框。
     */
-    elements.solutionText.innerHTML =
-      result.solution ||
-      result.explanation ||
-      "<p>暫無解題步驟。</p>";
-  }
-}
+    setText(
+      elements.correctAnswer,
+      result.correct_answer ||
+      result.answer ||
+      "暫無資料"
+    );
 
+    setText(
+      elements.score,
+      `${points} 分`
+    );
 
-    if (els.solution) {
-      /*
-        solution 是由資料庫管理員輸入的受信任內容。
-        如果將來允許普通使用者輸入 solution，
-        不應直接使用 innerHTML。
-      */
-      els.solution.innerHTML =
+    setText(
+      elements.xp,
+      xp ? `+${xp} XP` : ""
+    );
+
+    if (elements.solutionText) {
+      elements.solutionText.innerHTML =
         result.solution ||
         result.explanation ||
         "<p>暫無解題步驟。</p>";
     }
   }
-
-  // --------------------------------------------------
-  // 上一題、下一題
-  // --------------------------------------------------
 
   function showPreviousQuestion() {
     if (currentIndex <= 0) {
@@ -654,8 +548,9 @@
   }
 
   function showNextQuestion() {
-    if (currentIndex >= questions.length - 1) {
-      showCompleted();
+    if (
+      currentIndex >= questions.length - 1
+    ) {
       return;
     }
 
@@ -664,96 +559,106 @@
   }
 
   function showCompleted() {
-    if (els.completedMessage) {
-      els.completedMessage.hidden = false;
-      els.completedMessage.textContent =
-        "你已完成這個星球的所有題目！";
+    if (elements.completedMessage) {
+      elements.completedMessage.hidden = false;
+      elements.completedMessage.textContent =
+        "恭喜你完成這個星球的全部題目！";
     }
 
-    if (els.questionTitle) {
-      els.questionTitle.textContent =
-        "星球任務完成";
-    }
-
-    if (els.questionText) {
-      els.questionText.textContent =
-        "恭喜你完成本星球的全部題目。";
-    }
-
-    if (els.answerInput) {
-      els.answerInput.disabled = true;
-    }
-
-    if (els.submitAnswer) {
-      els.submitAnswer.disabled = true;
-    }
-
-    showMessage(
-      "本星球任務完成！",
-      "success"
+    setText(
+      elements.questionTitle,
+      "星球任務完成"
     );
+
+    setText(
+      elements.questionText,
+      "你已完成這個星球的所有題目。"
+    );
+
+    if (elements.answerInput) {
+      elements.answerInput.disabled = true;
+    }
+
+    if (elements.submitAnswer) {
+      elements.submitAnswer.disabled = true;
+    }
   }
 
-  // --------------------------------------------------
-  // 輸入及顯示狀態
-  // --------------------------------------------------
-
-  function setSubmitState(isSubmitting) {
-    if (!els.submitAnswer) {
-      return;
+  function setSubmitting(isSubmitting) {
+    if (elements.answerInput) {
+      elements.answerInput.disabled =
+        isSubmitting;
     }
 
-    els.submitAnswer.disabled = isSubmitting;
-
-    els.submitAnswer.textContent =
-      isSubmitting
-        ? "提交中..."
-        : "提交答案";
-
-    if (els.answerInput) {
-      els.answerInput.disabled =
+    if (elements.submitAnswer) {
+      elements.submitAnswer.disabled =
         isSubmitting;
+
+      elements.submitAnswer.textContent =
+        isSubmitting
+          ? "提交中……"
+          : "提交答案";
     }
   }
 
   function showLoading(isLoading) {
-    if (!els.loading) {
-      return;
-    }
-
-    els.loading.hidden = !isLoading;
-  }
-
-  function clearResult() {
-    setText(els.correctAnswer, "");
-    setText(els.score, "");
-    setText(els.xp, "");
-
-    if (els.solution) {
-      els.solution.innerHTML = "";
+    if (elements.loading) {
+      elements.loading.hidden =
+        !isLoading;
     }
   }
 
   function clearMessage() {
-    showMessage("", "");
-  }
-
-  function showMessage(message, type) {
-    if (!els.answerMessage) {
+    if (!elements.answerMessage) {
       return;
     }
 
-    els.answerMessage.textContent = message;
-    els.answerMessage.className = "";
+    elements.answerMessage.textContent = "";
+    elements.answerMessage.hidden = true;
+    elements.answerMessage.className =
+      "answer-message";
+  }
+
+  function showMessage(message, type) {
+    if (!elements.answerMessage) {
+      return;
+    }
+
+    elements.answerMessage.textContent =
+      message || "";
+
+    elements.answerMessage.hidden =
+      !message;
+
+    elements.answerMessage.className =
+      "answer-message";
 
     if (type) {
-      els.answerMessage.classList.add(
+      elements.answerMessage.classList.add(
         `message-${type}`
       );
     }
+  }
 
-    els.answerMessage.hidden =
-      !message;
+  function clearResult() {
+    setText(
+      elements.correctAnswer,
+      ""
+    );
+
+    setText(
+      elements.score,
+      ""
+    );
+
+    setText(
+      elements.xp,
+      ""
+    );
+
+    if (elements.solutionText) {
+      elements.solutionText.innerHTML = "";
+    }
   }
 
   function setText(element, value) {
