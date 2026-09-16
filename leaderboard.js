@@ -1,115 +1,90 @@
-<!doctype html>
-<html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
+async function loadLeaderboard() {
+  const user = await requireLogin();
+  if (!user) return;
 
-    <title>星際排行榜｜心中有數</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
+  const summary = await getMySummary();
 
-  <body>
-    <div class="space-background"></div>
+  document.getElementById(
+    "myName"
+  ).textContent = summary.display_name;
 
-    <header class="site-header">
-      <a class="logo" href="index.html">
-        <span class="logo-core">數</span>
-        <span>
-          心中有數
-          <small>MATH UNIVERSE</small>
-        </span>
-      </a>
+  document.getElementById(
+    "myShip"
+  ).textContent = summary.ship_name;
 
-      <nav>
-        <a href="levels.html">銀河地圖</a>
-        <a href="leaderboard.html" class="active">
-          排行榜
-        </a>
-        <button data-sound-toggle type="button">🔇</button>
-        <button data-logout type="button">登出</button>
-      </nav>
-    </header>
+  document.getElementById(
+    "myModel"
+  ).textContent =
+    `LV.${summary.ship_level} ${summary.ship_model}`;
 
-    <main class="page-container">
-      <section class="leaderboard-heading">
-        <p class="system-label">
-          GALACTIC EXPLORER RANKING
-        </p>
+  document.getElementById(
+    "myScore"
+  ).textContent = summary.score;
 
-        <h1>星際探索者排行榜</h1>
+  const body =
+    document.getElementById("rankingBody");
 
-        <p>
-          排名由 Supabase 根據正確答案分數自動計算，
-          飛船升級不會消耗排行榜分數。
-        </p>
-      </section>
+  body.innerHTML = `
+    <tr>
+      <td colspan="6">
+        正在更新星際排名……
+      </td>
+    </tr>
+  `;
 
-      <section class="my-rank-card">
-        <div>
-          <span>探索者</span>
-          <strong id="myName">---</strong>
-        </div>
+  const { data, error } =
+    await window.db.rpc("get_leaderboard");
 
-        <div>
-          <span>飛船</span>
-          <strong id="myShip">---</strong>
-        </div>
+  if (error) {
+    body.innerHTML = `
+      <tr>
+        <td colspan="6">
+          ${escapeHTML(error.message)}
+        </td>
+      </tr>
+    `;
+    return;
+  }
 
-        <div>
-          <span>型號</span>
-          <strong id="myModel">---</strong>
-        </div>
+  body.innerHTML = "";
 
-        <div>
-          <span>累計分數</span>
-          <strong id="myScore">0</strong>
-        </div>
-      </section>
+  data.forEach((player) => {
+    const row =
+      document.createElement("tr");
 
-      <section class="ranking-panel">
-        <div class="ranking-header">
-          <h2>TOP EXPLORERS</h2>
+    if (player.rank <= 3) {
+      row.classList.add(
+        `top-rank-${player.rank}`
+      );
+    }
 
-          <button
-            id="refreshRanking"
-            class="game-button cyan small"
-            type="button"
-          >
-            更新排名
-          </button>
-        </div>
+    const rank =
+      player.rank === 1
+        ? "🥇 1st"
+        : player.rank === 2
+          ? "🥈 2nd"
+          : player.rank === 3
+            ? "🥉 3rd"
+            : `#${player.rank}`;
 
-        <div class="table-scroll">
-          <table class="ranking-table">
-            <thead>
-              <tr>
-                <th>排名</th>
-                <th>探索者</th>
-                <th>飛船</th>
-                <th>型號</th>
-                <th>分數</th>
-                <th>答對</th>
-              </tr>
-            </thead>
+    row.innerHTML = `
+      <td class="rank-cell">${rank}</td>
+      <td>${escapeHTML(player.display_name)}</td>
+      <td>${escapeHTML(player.ship_name)}</td>
+      <td>
+        LV.${player.ship_level}
+        ${escapeHTML(player.ship_model)}
+      </td>
+      <td class="score-cell">${player.score}</td>
+      <td>${player.correct}</td>
+    `;
 
-            <tbody id="rankingBody">
-              <tr>
-                <td colspan="6">
-                  正在載入星際資料……
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+    body.appendChild(row);
+  });
+}
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
-    <script src="common.js"></script>
-    <script src="leaderboard.js"></script>
-  </body>
-</html>
+document
+  .getElementById("refreshRanking")
+  .addEventListener("click", loadLeaderboard);
+
+loadLeaderboard();
