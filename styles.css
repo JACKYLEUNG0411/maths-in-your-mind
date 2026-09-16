@@ -2067,3 +2067,207 @@ footer {
     transition-duration: 0.001ms !important;
   }
 }
+/* =====================================================
+   Practice page：按鈕可讀性修正
+   ===================================================== */
+
+.practice-page button,
+.answer-card button,
+.question-navigation button,
+#submitAnswer,
+#previousQuestion,
+#nextQuestion {
+  appearance: none;
+  border: 2px solid #2563eb;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  min-height: 44px;
+  padding: 10px 20px;
+  text-shadow: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* 提交答案按鈕 */
+#submitAnswer {
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
+  margin-top: 14px;
+  min-width: 130px;
+}
+
+#submitAnswer:hover:not(:disabled) {
+  background: #065f46;
+  border-color: #065f46;
+  box-shadow: 0 4px 10px rgba(4, 120, 87, 0.25);
+  transform: translateY(-1px);
+}
+
+/* 上一題、下一題 */
+.question-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 24px 0;
+}
+
+#previousQuestion,
+#nextQuestion {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+  min-width: 120px;
+}
+
+#previousQuestion:hover:not(:disabled),
+#nextQuestion:hover:not(:disabled) {
+  background: #1e40af;
+  border-color: #1e40af;
+  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.25);
+  transform: translateY(-1px);
+}
+
+/*
+  disabled 狀態仍然使用深色背景和白色文字。
+  這樣即使按鈕不能按，文字也不會變成灰色難以閱讀。
+*/
+.practice-page button:disabled,
+.answer-card button:disabled,
+.question-navigation button:disabled,
+#submitAnswer:disabled,
+#previousQuestion:disabled,
+#nextQuestion:disabled {
+  background: #64748b !important;
+  border-color: #475569 !important;
+  color: #ffffff !important;
+  cursor: not-allowed;
+  opacity: 1 !important;
+  text-shadow: none;
+}
+
+/* 正在提交答案時 */
+#submitAnswer:disabled {
+  background: #475569 !important;
+  border-color: #334155 !important;
+}
+
+/* =====================================================
+   正確答案 Highlight 方框
+   ===================================================== */
+
+.result-area {
+  margin-top: 20px;
+}
+
+.result-area p {
+  color: #1f2937;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/*
+  正確答案本身顯示成醒目的方框。
+  使用 inline-block，讓方框只包住答案內容。
+*/
+#correctAnswer {
+  display: inline-block;
+  min-width: 90px;
+  margin-left: 6px;
+  padding: 8px 16px;
+  border: 3px solid #16a34a;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #14532d;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  text-align: center;
+  vertical-align: middle;
+  box-shadow:
+    0 2px 6px rgba(22, 163, 74, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+/* 答對時的綠色訊息 */
+.answer-message.message-success {
+  display: block;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 2px solid #16a34a;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #14532d;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* 答錯時的提示訊息 */
+.answer-message.message-error {
+  display: block;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 2px solid #dc2626;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #7f1d1d;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+/* 解題步驟 */
+#solutionText {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-left: 5px solid #2563eb;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* 輸入框文字也提高可讀性 */
+#answerInput {
+  min-height: 44px;
+  border: 2px solid #64748b;
+  border-radius: 8px;
+  color: #111827;
+  background: #ffffff;
+  font-size: 18px;
+  padding: 8px 12px;
+}
+
+#answerInput:focus {
+  border-color: #2563eb;
+  outline: 3px solid rgba(37, 99, 235, 0.2);
+}
+
+/* 手機版 */
+@media (max-width: 600px) {
+  .question-navigation {
+    flex-direction: column;
+  }
+
+  #previousQuestion,
+  #nextQuestion,
+  #submitAnswer {
+    width: 100%;
+  }
+
+  #correctAnswer {
+    display: block;
+    width: fit-content;
+    margin: 8px 0 0;
+  }
+}
