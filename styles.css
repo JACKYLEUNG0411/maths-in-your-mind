@@ -3494,3 +3494,49 @@ footer {
     white-space: nowrap;
   }
 }
+/* 首頁排行榜按鈕 */
+.leaderboard-home-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  width: 100%;
+  min-height: 64px;
+  margin-top: 18px;
+  padding: 16px 24px;
+
+  color: #ffffff;
+  background: #8b5cf6;
+  border: 3px solid #000000;
+  border-radius: 18px;
+
+  box-shadow: 0 7px 0 #000000;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.leaderboard-home-button:hover {
+  background: #a78bfa;
+  transform: translateY(-2px);
+  box-shadow: 0 9px 0 #000000;
+}
+
+.leaderboard-home-button:active {
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 #000000;
+}
+
+@media (max-width: 600px) {
+  .leaderboard-home-button {
+    min-height: 60px;
+    margin-top: 16px;
+    font-size: 18px;
+  }
+}
