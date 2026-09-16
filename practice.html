@@ -8,54 +8,154 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>練習任務｜Maths in Your Mind</title>
+  <meta
+    name="theme-color"
+    content="#090d24"
+  >
+
+  <title>星球練習｜Maths in Your Mind</title>
 
   <link rel="stylesheet" href="styles.css">
 </head>
 
-<body>
+<body class="practice-universe-body">
+
   <main class="practice-page">
 
+    <!-- 頂部導航及星球資料 -->
     <header class="practice-header">
-      <a href="levels.html">
-        ← 返回星球地圖
-      </a>
+      <div class="practice-header-top">
+        <a
+          href="levels.html"
+          class="back-to-map"
+        >
+          <span aria-hidden="true">←</span>
+          返回星球地圖
+        </a>
 
-      <h1 id="levelName">
-        載入中……
-      </h1>
+        <div class="mission-label">
+          <span class="mission-dot"></span>
+          LIVE PRACTICE MISSION
+        </div>
+      </div>
 
-      <p id="levelDescription"></p>
+      <section class="planet-hero">
+        <div class="planet-hero-icon" aria-hidden="true">
+          ✦
+        </div>
 
-      <div class="practice-progress">
-        <span id="progressText">
-          題目載入中……
-        </span>
+        <div class="planet-hero-content">
+          <p class="eyebrow">
+            MATHS IN YOUR MIND · PLANET MISSION
+          </p>
 
-        <div class="progress-track">
+          <h1 id="levelName">
+            正在連接星球……
+          </h1>
+
+          <p id="levelDescription">
+            正在載入任務資料……
+          </p>
+        </div>
+      </section>
+
+      <section
+        class="mission-progress-card"
+        aria-label="答題進度"
+      >
+        <div class="progress-header">
+          <div>
+            <p class="progress-title">
+              任務進度
+            </p>
+
+            <p
+              id="progressText"
+              class="progress-subtitle"
+            >
+              載入中……
+            </p>
+          </div>
+
+          <div
+            id="questionNumber"
+            class="question-counter"
+          >
+            -- / --
+          </div>
+        </div>
+
+        <div
+          class="progress-track"
+          aria-hidden="true"
+        >
           <div
             id="progress"
             class="progress-bar"
             style="width: 0%;"
           ></div>
         </div>
-      </div>
+      </section>
     </header>
 
-    <section class="question-card">
+    <!-- 題目任務卡 -->
+    <section
+      class="mission-card question-card"
+      aria-live="polite"
+    >
+      <div class="mission-card-topline">
+        <div class="zone-identity">
+          <span
+            id="zoneIcon"
+            class="zone-icon"
+            aria-hidden="true"
+          >
+            ◆
+          </span>
 
-      <div class="question-meta">
-        <span id="questionNumber"></span>
-        <span id="zoneName"></span>
-        <span id="topic"></span>
-        <span id="difficulty"></span>
-        <span id="points"></span>
+          <div>
+            <p class="zone-label">
+              MISSION ZONE
+            </p>
+
+            <p
+              id="zoneName"
+              class="zone-name"
+            ></p>
+          </div>
+        </div>
+
+        <div class="mission-tags">
+          <span
+            id="topic"
+            class="mission-tag topic-tag"
+          ></span>
+
+          <span
+            id="difficulty"
+            class="mission-tag difficulty-tag"
+          ></span>
+
+          <span
+            id="points"
+            class="mission-tag points-tag"
+          ></span>
+        </div>
       </div>
 
-      <p id="zoneDescription"></p>
+      <p
+        id="zoneDescription"
+        class="zone-description"
+      ></p>
+
+      <div class="question-divider"></div>
+
+      <p class="question-label">
+        CURRENT CHALLENGE
+      </p>
 
       <h2 id="questionTitle">
-        載入題目中……
+        題目載入中……
       </h2>
 
       <div
@@ -63,105 +163,197 @@
         class="question-text"
       ></div>
 
-      <div class="hint-box">
-        <strong>提示：</strong>
-        <span id="hintText">
-          載入中……
-        </span>
+      <!-- 提示：預設收起 -->
+      <div class="hint-panel">
+        <button
+          id="toggleHint"
+          class="hint-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="hintContent"
+        >
+          <span class="hint-toggle-icon" aria-hidden="true">
+            💡
+          </span>
+
+          <span id="hintButtonText">
+            使用提示
+          </span>
+
+          <span
+            class="hint-toggle-arrow"
+            aria-hidden="true"
+          >
+            ▾
+          </span>
+        </button>
+
+        <div
+          id="hintContent"
+          class="hint-content"
+          hidden
+        >
+          <span class="hint-content-label">
+            任務提示
+          </span>
+
+          <p id="hintText"></p>
+        </div>
       </div>
     </section>
 
-    <section class="answer-card">
+    <!-- 作答卡 -->
+    <section class="mission-card answer-card">
+      <div class="answer-card-heading">
+        <div>
+          <p class="question-label">
+            RESPONSE CONSOLE
+          </p>
 
-      <label for="answerInput">
-        請輸入你的答案
+          <h2>輸入你的答案</h2>
+        </div>
+
+        <span class="answer-lock-note">
+          每題只可提交一次
+        </span>
+      </div>
+
+      <label
+        for="answerInput"
+        class="answer-input-label"
+      >
+        請輸入計算結果或最終答案
       </label>
 
-      <input
-        id="answerInput"
-        type="text"
-        autocomplete="off"
-        placeholder="例如：510、3:4、1.6 km"
-      >
+      <div class="answer-input-row">
+        <input
+          id="answerInput"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          placeholder="例如：0、3:4、1.6 km"
+        >
 
-      <button
-        id="submitAnswer"
-        type="button"
-      >
-        提交答案
-      </button>
+        <button
+          id="submitAnswer"
+          class="submit-answer-button"
+          type="button"
+        >
+          <span aria-hidden="true">✦</span>
+          提交答案
+        </button>
+      </div>
+
+      <p class="answer-format-note">
+        可輸入數字、百分數、比例或附有單位的答案。
+      </p>
 
       <div
         id="answerMessage"
         class="answer-message"
+        role="status"
+        aria-live="polite"
         hidden
       ></div>
 
-      <div class="result-area">
+      <!-- 答題後的結果卡 -->
+      <section
+        id="resultPanel"
+        class="result-panel"
+        hidden
+      >
+        <div
+          id="resultStatus"
+          class="result-status"
+        ></div>
 
-        <p>
-          正確答案：
-          <strong id="correctAnswer"></strong>
-        </p>
+        <div class="verified-answer-section">
+          <div class="verified-answer-heading">
+            <span class="verified-icon" aria-hidden="true">
+              ✦
+            </span>
 
-        <p>
-          本題得分：
-          <strong id="score"></strong>
-        </p>
+            <div>
+              <p>VERIFIED ANSWER</p>
+              <h3>正確答案</h3>
+            </div>
+          </div>
 
-        <p>
-          XP：
-          <strong id="xp"></strong>
-        </p>
+          <div
+            id="correctAnswer"
+            class="correct-answer-box"
+          ></div>
+        </div>
 
-        <div id="solutionText"></div>
+        <div class="reward-grid">
+          <div class="reward-item">
+            <span>本題得分</span>
+            <strong id="score">--</strong>
+          </div>
 
-      </div>
+          <div class="reward-item">
+            <span>獲得 XP</span>
+            <strong id="xp">--</strong>
+          </div>
+        </div>
+
+        <div class="solution-section">
+          <div class="solution-heading">
+            <span aria-hidden="true">⌁</span>
+            解題步驟
+          </div>
+
+          <div id="solutionText"></div>
+        </div>
+      </section>
     </section>
 
-    <nav class="question-navigation">
-
+    <!-- 題目導航 -->
+    <nav
+      class="question-navigation"
+      aria-label="題目導航"
+    >
       <button
         id="previousQuestion"
+        class="navigation-button previous-button"
         type="button"
       >
+        <span aria-hidden="true">←</span>
         上一題
       </button>
 
       <button
         id="nextQuestion"
+        class="navigation-button next-button"
         type="button"
       >
         下一題
+        <span aria-hidden="true">→</span>
       </button>
-
     </nav>
 
     <div
       id="loading"
-      class="loading-message"
+      class="loading-overlay"
+      aria-live="polite"
     >
-      載入中……
+      <div class="loading-orbit">
+        <span></span>
+      </div>
+
+      <p>正在連接星球任務系統……</p>
     </div>
 
-    <div
+    <section
       id="completedMessage"
       class="completed-message"
       hidden
-    ></div>
+    ></section>
 
   </main>
 
-  <!-- 必須先載入 Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- config.js 必須先於 practice.js -->
   <script src="config.js"></script>
-
-  <!-- 如果你的專案有 common.js，可以保留 -->
-  <script src="common.js"></script>
-
-  <!-- 最後才載入 practice.js -->
-  <script src="practice.js?v=3"></script>
+  <script src="practice.js?v=6"></script>
 </body>
 </html>
