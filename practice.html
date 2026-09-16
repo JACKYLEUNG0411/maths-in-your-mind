@@ -1,1 +1,238 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <title>任務答題｜心中有數</title>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="space-background" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="logo" href="index.html">
+        <span class="logo-core">數</span>
+        <span>
+          心中有數
+          <small>DSE MATH MISSION</small>
+        </span>
+      </a>
+
+      <nav>
+        <a href="levels.html">任務地圖</a>
+        <a href="leaderboard.html">排行榜</a>
+        <button data-logout type="button">登出</button>
+      </nav>
+    </header>
+
+    <main class="practice-page">
+      <section class="practice-status">
+        <div>
+          <p class="system-label" id="levelCode">
+            MISSION
+          </p>
+
+          <h1 id="levelName">正在載入任務...</h1>
+        </div>
+
+        <div class="player-hud">
+          <div>
+            <span>探索者</span>
+            <strong id="playerName">---</strong>
+          </div>
+
+          <div>
+            <span>累計分數</span>
+            <strong id="playerScore">0</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="question-layout">
+        <aside class="question-sidebar">
+          <p class="panel-code">
+            QUESTION DATABASE
+          </p>
+
+          <div id="questionNavigation"></div>
+
+          <a
+            href="levels.html"
+            class="button secondary full"
+          >
+            返回任務地圖
+          </a>
+        </aside>
+
+        <article class="question-console">
+          <div class="scan-line" aria-hidden="true"></div>
+
+          <div class="question-meta">
+            <span id="questionTopic">數學</span>
+            <span id="questionNumber">1 / 5</span>
+          </div>
+
+          <h2 id="questionTitle">
+            正在載入題目
+          </h2>
+
+          <p
+            id="questionText"
+            class="question-text"
+          ></p>
+
+          <div
+            id="answerArea"
+            class="answer-console"
+          >
+            <label for="answerInput">
+              輸入你的最終答案
+            </label>
+
+            <div class="answer-input-row">
+              <input
+                id="answerInput"
+                type="text"
+                autocomplete="off"
+                placeholder="輸入後不能修改"
+              />
+
+              <button
+                id="submitAnswer"
+                class="button primary"
+                type="button"
+              >
+                正式提交
+              </button>
+            </div>
+
+            <p class="warning-text">
+              注意：每道題只能正式提交一次。
+            </p>
+
+            <button
+              id="showHint"
+              class="text-button"
+              type="button"
+            >
+              顯示任務提示
+            </button>
+
+            <p
+              id="hintText"
+              class="hint-box"
+              hidden
+            ></p>
+          </div>
+
+          <p
+            id="answerMessage"
+            class="message"
+            aria-live="polite"
+          ></p>
+
+          <section
+            id="resultPanel"
+            class="result-panel"
+            hidden
+          >
+            <p class="panel-code">
+              ANALYSIS COMPLETE
+            </p>
+
+            <h3 id="resultTitle">分析結果</h3>
+
+            <div class="result-data">
+              <div>
+                <span>你的答案</span>
+                <strong id="submittedAnswer">—</strong>
+              </div>
+
+              <div>
+                <span>正確答案</span>
+                <strong id="correctAnswer">—</strong>
+              </div>
+
+              <div>
+                <span>本題得分</span>
+                <strong id="awardedPoints">0 / 5</strong>
+              </div>
+            </div>
+
+            <div class="solution-box">
+              <h4>完整解題步驟</h4>
+              <div id="solutionText"></div>
+            </div>
+          </section>
+
+          <div class="question-actions">
+            <button
+              id="previousQuestion"
+              class="button secondary"
+              type="button"
+            >
+              ← 上一題
+            </button>
+
+            <button
+              id="nextQuestion"
+              class="button primary"
+              type="button"
+            >
+              下一題 →
+            </button>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <div
+      id="confirmDialog"
+      class="modal"
+      hidden
+    >
+      <div class="modal-card">
+        <p class="system-label">
+          FINAL CONFIRMATION
+        </p>
+
+        <h2>確定提交答案？</h2>
+
+        <p>
+          提交後不能修改或重新回答這道題。
+        </p>
+
+        <div class="modal-actions">
+          <button
+            id="cancelSubmit"
+            class="button secondary"
+            type="button"
+          >
+            返回檢查
+          </button>
+
+          <button
+            id="confirmSubmit"
+            class="button primary"
+            type="button"
+          >
+            確定提交
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="practice.js"></script>
+  </body>
+</html>
 
