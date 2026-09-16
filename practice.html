@@ -1,273 +1,167 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1"
-    />
+<head>
+  <meta charset="UTF-8">
 
-    <title>星球探索任務｜心中有數</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <body>
-    <div class="space-background"></div>
+  <title>練習任務｜Maths in Your Mind</title>
 
-    <header class="site-header">
-      <a class="logo" href="index.html">
-        <span class="logo-core">數</span>
-        <span>
-          心中有數
-          <small>MATH UNIVERSE</small>
-        </span>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <main class="practice-page">
+
+    <header class="practice-header">
+      <a href="levels.html">
+        ← 返回星球地圖
       </a>
 
-      <nav>
-        <a href="levels.html">銀河地圖</a>
-        <a href="leaderboard.html">排行榜</a>
-        <button data-sound-toggle type="button">🔇</button>
-        <button data-logout type="button">登出</button>
-      </nav>
+      <h1 id="levelName">
+        載入中……
+      </h1>
+
+      <p id="levelDescription"></p>
+
+      <div class="practice-progress">
+        <span id="progressText">
+          題目載入中……
+        </span>
+
+        <div class="progress-track">
+          <div
+            id="progress"
+            class="progress-bar"
+            style="width: 0%;"
+          ></div>
+        </div>
+      </div>
     </header>
 
-    <main class="practice-page">
-      <section class="practice-status">
-        <div>
-          <p id="planetCode" class="system-label">
-            PLANET
-          </p>
+    <section class="question-card">
 
-          <h1 id="planetName">
-            正在掃描星球……
-          </h1>
+      <div class="question-meta">
+        <span id="questionNumber"></span>
+        <span id="zoneName"></span>
+        <span id="topic"></span>
+        <span id="difficulty"></span>
+        <span id="points"></span>
+      </div>
 
-          <p id="zoneName">
-            等待區域資料
-          </p>
-        </div>
+      <p id="zoneDescription"></p>
 
-        <div class="player-hud">
-          <div>
-            <span>探索者</span>
-            <strong id="playerName">---</strong>
-          </div>
+      <h2 id="questionTitle">
+        載入題目中……
+      </h2>
 
-          <div>
-            <span>累計分數</span>
-            <strong id="playerScore">0</strong>
-          </div>
+      <div
+        id="questionText"
+        class="question-text"
+      ></div>
 
-          <div>
-            <span>飛船等級</span>
-            <strong id="shipLevel">LV.1</strong>
-          </div>
-        </div>
-      </section>
+      <div class="hint-box">
+        <strong>提示：</strong>
+        <span id="hintText">
+          載入中……
+        </span>
+      </div>
+    </section>
 
-      <section class="question-layout">
-        <aside class="question-sidebar">
-          <p class="panel-code">
-            PLANET EXPLORATION ZONES
-          </p>
+    <section class="answer-card">
 
-          <div id="questionNavigation"></div>
+      <label for="answerInput">
+        請輸入你的答案
+      </label>
 
-          <a
-            href="levels.html"
-            class="game-button cyan full small"
-          >
-            返回銀河地圖
-          </a>
-        </aside>
+      <input
+        id="answerInput"
+        type="text"
+        autocomplete="off"
+        placeholder="例如：510、3:4、1.6 km"
+      >
 
-        <article class="question-console">
-          <div class="scan-line"></div>
+      <button
+        id="submitAnswer"
+        type="button"
+      >
+        提交答案
+      </button>
 
-          <div class="question-meta">
-            <span id="questionTopic">數學</span>
-            <span id="questionNumber">1 / 5</span>
-          </div>
+      <div
+        id="answerMessage"
+        class="answer-message"
+        hidden
+      ></div>
 
-          <h2 id="questionTitle">
-            正在載入任務
-          </h2>
-
-          <p id="questionText" class="question-text"></p>
-
-          <div class="answer-console">
-            <label for="answerInput">
-              輸入最終答案
-            </label>
-
-            <div class="answer-input-row">
-              <input
-                id="answerInput"
-                type="text"
-                autocomplete="off"
-                placeholder="提交後不能修改"
-              />
-
-              <button
-                id="submitAnswer"
-                class="game-button pink"
-                type="button"
-              >
-                正式提交
-              </button>
-            </div>
-
-            <p class="warning-text">
-              每個探索區域只能提交一次答案。
-            </p>
-
-            <button
-              id="showHint"
-              class="text-button"
-              type="button"
-            >
-              啟動掃描提示
-            </button>
-
-            <p id="hintText" class="hint-box" hidden></p>
-          </div>
-
-          <p id="answerMessage" class="message"></p>
-
-          <section id="resultPanel" class="result-panel" hidden>
-            <p class="panel-code">
-              ANALYSIS COMPLETE
-            </p>
-
-            <h3 id="resultTitle">分析結果</h3>
-
-            <div class="result-data">
-              <div>
-                <span>你的答案</span>
-                <strong id="submittedAnswer">—</strong>
-              </div>
-
-              <div>
-                <span>正確答案</span>
-                <strong id="correctAnswer">—</strong>
-              </div>
-
-              <div>
-                <span>本區能量</span>
-                <strong id="awardedPoints">0 / 5</strong>
-              </div>
-            </div>
-
-            <div class="solution-box">
-              <h4>完整解題步驟</h4>
-              <div id="solutionText"></div>
-            </div>
-          </section>
-
-          <div class="question-actions">
-            <button
-              id="previousQuestion"
-              class="game-button dark small"
-              type="button"
-            >
-              ← 上一區域
-            </button>
-
-            <button
-              id="nextQuestion"
-              class="game-button cyan small"
-              type="button"
-            >
-              下一區域 →
-            </button>
-          </div>
-        </article>
-      </section>
-    </main>
-
-    <div id="confirmDialog" class="modal" hidden>
-      <div class="modal-card">
-        <p class="system-label">
-          FINAL CONFIRMATION
-        </p>
-
-        <h2>確定提交答案？</h2>
+      <div class="result-area">
 
         <p>
-          提交後不能修改或重新回答。
+          正確答案：
+          <strong id="correctAnswer"></strong>
         </p>
-
-        <div class="modal-actions">
-          <button
-            id="cancelSubmit"
-            class="game-button dark"
-            type="button"
-          >
-            返回檢查
-          </button>
-
-          <button
-            id="confirmSubmit"
-            class="game-button pink"
-            type="button"
-          >
-            確定提交
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="planetClearModal" class="modal" hidden>
-      <div class="modal-card clear-card">
-        <p class="system-label">
-          PLANET CLEARED
-        </p>
-
-        <div class="clear-badge">✓</div>
-
-        <h2 id="clearPlanetName">
-          星球探索完成
-        </h2>
 
         <p>
-          5 個探索區域已全部完成。
-          飛船獲得額外 50 XP。
+          本題得分：
+          <strong id="score"></strong>
         </p>
 
-        <div class="clear-stats">
-          <div>
-            <span>星球得分</span>
-            <strong id="clearScore">0 / 25</strong>
-          </div>
+        <p>
+          XP：
+          <strong id="xp"></strong>
+        </p>
 
-          <div>
-            <span>飛船等級</span>
-            <strong id="clearLevel">LV.1</strong>
-          </div>
-        </div>
+        <div id="solutionText"></div>
 
-        <div class="modal-actions">
-          <a
-            href="levels.html"
-            class="game-button dark"
-          >
-            返回銀河地圖
-          </a>
-
-          <button
-            id="goNextPlanet"
-            class="game-button lime"
-            type="button"
-          >
-            前往下一顆星球
-          </button>
-        </div>
       </div>
+    </section>
+
+    <nav class="question-navigation">
+
+      <button
+        id="previousQuestion"
+        type="button"
+      >
+        上一題
+      </button>
+
+      <button
+        id="nextQuestion"
+        type="button"
+      >
+        下一題
+      </button>
+
+    </nav>
+
+    <div
+      id="loading"
+      class="loading-message"
+    >
+      載入中……
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="config.js"></script>
-    <script src="common.js"></script>
-    <script src="practice.js"></script>
-  </body>
+    <div
+      id="completedMessage"
+      class="completed-message"
+      hidden
+    ></div>
+
+  </main>
+
+  <!-- 必須先載入 Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- config.js 必須先於 practice.js -->
+  <script src="config.js"></script>
+
+  <!-- 如果你的專案有 common.js，可以保留 -->
+  <script src="common.js"></script>
+
+  <!-- 最後才載入 practice.js -->
+  <script src="practice.js?v=3"></script>
+</body>
 </html>
