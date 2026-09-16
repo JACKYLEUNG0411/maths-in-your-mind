@@ -28,3 +28,63 @@ $('hintButton').onclick=()=>{$('feedback').textContent='提示：'+questions[act
 $('solutionButton').onclick=()=>{const el=$('solution');el.innerHTML='<strong>解題步驟</strong><br>'+questions[active].solution;el.classList.toggle('visible')};
 document.querySelectorAll('.topic-card').forEach(card=>card.onclick=()=>{const i=questions.findIndex(q=>q.topic.includes(card.dataset.topic)||card.dataset.topic==='代數'&&(q.topic==='一元一次方程'||q.topic==='代數式'));load(i<0?0:i);location.hash='practice';});
 renderList();load(0);progress();
+async function loadLeaderboard() {
+  const leaderboardBody =
+    document.getElementById("leaderboard-body");
+
+  if (!leaderboardBody) {
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("leaderboard")
+    .select("username, score, created_at")
+    .order("score", { ascending: false })
+    .order("created_at", { ascending: true })
+    .limit(20);
+
+  if (error) {
+    console.error("讀取排行榜失敗：", error);
+
+    leaderboardBody.innerHTML = `
+      <tr>
+        <td colspan="3">排行榜讀取失敗</td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    leaderboardBody.innerHTML = `
+      <tr>
+        <td colspan="3">目前還沒有分數</td>
+      </tr>
+    `;
+
+    return;
+  }
+
+  leaderboardBody.innerHTML = "";
+
+  data.forEach((player, index) => {
+    const row = document.createElement("tr");
+
+    const rankCell = document.createElement("td");
+    rankCell.textContent = index + 1;
+
+    const usernameCell = document.createElement("td");
+    usernameCell.textContent = player.username;
+
+    const scoreCell = document.createElement("td");
+    scoreCell.textContent = player.score;
+
+    row.appendChild(rankCell);
+    row.appendChild(usernameCell);
+    row.appendChild(scoreCell);
+
+    leaderboardBody.appendChild(row);
+  });
+}
+
+loadLeaderboard();
