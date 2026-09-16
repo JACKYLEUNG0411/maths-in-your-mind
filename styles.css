@@ -3461,3 +3461,36 @@ footer {
   background: #13594f !important;
   color: #d7ffed !important;
 }
+/* 排名表手機版顯示 */
+.table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ranking-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+}
+
+@media (max-width: 600px) {
+  .table-scroll {
+    width: 100%;
+    margin: 0;
+    overflow-x: auto;
+  }
+
+  .ranking-table {
+    min-width: 620px;
+  }
+
+  .ranking-table th,
+  .ranking-table td {
+    padding: 10px 8px;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+}
