@@ -1,1 +1,168 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <title>探索者登入｜心中有數</title>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="space-background" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="logo" href="index.html">
+        <span class="logo-core">數</span>
+        <span>
+          心中有數
+          <small>DSE MATH MISSION</small>
+        </span>
+      </a>
+
+      <nav>
+        <a href="index.html">首頁</a>
+        <a href="leaderboard.html">排行榜</a>
+      </nav>
+    </header>
+
+    <main class="auth-page">
+      <section class="auth-intro">
+        <p class="system-label">
+          EXPLORER IDENTIFICATION
+        </p>
+
+        <h1>
+          歡迎進入<br />
+          <span>數學任務中心</span>
+        </h1>
+
+        <p>
+          登入後，你的答案、關卡進度及累計分數
+          都會安全地保存在探索者帳戶中。
+        </p>
+
+        <ul class="status-list">
+          <li>每題只能提交一次</li>
+          <li>答對一題獲得 5 分</li>
+          <li>提交後提供完整解題步驟</li>
+          <li>完成五題解鎖下一關</li>
+        </ul>
+      </section>
+
+      <section class="auth-panel">
+        <div class="auth-tabs">
+          <button
+            id="showLogin"
+            class="active"
+            type="button"
+          >
+            登入
+          </button>
+
+          <button
+            id="showRegister"
+            type="button"
+          >
+            建立帳戶
+          </button>
+        </div>
+
+        <form id="loginForm">
+          <p class="panel-code">
+            ACCESS // EXISTING EXPLORER
+          </p>
+
+          <label for="loginEmail">電郵地址</label>
+          <input
+            id="loginEmail"
+            type="email"
+            autocomplete="email"
+            required
+          />
+
+          <label for="loginPassword">密碼</label>
+          <input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            minlength="6"
+            required
+          />
+
+          <button
+            class="button primary full"
+            type="submit"
+          >
+            登入任務中心
+          </button>
+        </form>
+
+        <form id="registerForm" hidden>
+          <p class="panel-code">
+            REGISTER // NEW EXPLORER
+          </p>
+
+          <label for="displayName">玩家名稱</label>
+          <input
+            id="displayName"
+            type="text"
+            maxlength="20"
+            autocomplete="nickname"
+            required
+          />
+
+          <label for="registerEmail">電郵地址</label>
+          <input
+            id="registerEmail"
+            type="email"
+            autocomplete="email"
+            required
+          />
+
+          <label for="registerPassword">密碼</label>
+          <input
+            id="registerPassword"
+            type="password"
+            minlength="6"
+            autocomplete="new-password"
+            required
+          />
+
+          <label for="confirmPassword">確認密碼</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            minlength="6"
+            autocomplete="new-password"
+            required
+          />
+
+          <button
+            class="button primary full"
+            type="submit"
+          >
+            建立探索者帳戶
+          </button>
+        </form>
+
+        <p
+          id="authMessage"
+          class="message"
+          aria-live="polite"
+        ></p>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>
 
