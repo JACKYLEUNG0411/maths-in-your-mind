@@ -258,7 +258,33 @@
     }
   }
 
-  function bindEvents() {
+ function bindEvents() {
+  if (elements.answerInput) {
+    elements.answerInput.type = "text";
+    elements.answerInput.inputMode = "text";
+    elements.answerInput.removeAttribute("pattern");
+    elements.answerInput.setAttribute(
+      "autocapitalize",
+      "off"
+    );
+    elements.answerInput.setAttribute(
+      "autocomplete",
+      "off"
+    );
+    elements.answerInput.setAttribute(
+      "autocorrect",
+      "off"
+    );
+    elements.answerInput.spellcheck = false;
+  }
+
+  elements.submitAnswer?.addEventListener(
+    "click",
+    submitCurrentAnswer
+  );
+
+  // 以下原本內容保持不變
+
     elements.submitAnswer?.addEventListener(
       "click",
       submitCurrentAnswer
