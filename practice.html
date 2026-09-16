@@ -227,12 +227,16 @@
 
       <div class="answer-input-row">
         <input
-          id="answerInput"
-          type="text"
-          inputmode="decimal"
-          autocomplete="off"
-          placeholder="例如：0、3:4、1.6 km"
-        >
+  id="answerInput"
+  type="text"
+  inputmode="text"
+  autocomplete="off"
+  autocapitalize="off"
+  autocorrect="off"
+  spellcheck="false"
+  placeholder="例如：x^2、a+b、3:4、1.6 km"
+>
+
 
         <button
           id="submitAnswer"
@@ -354,6 +358,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
-  <script src="practice.js?v=6"></script>
+  <script src="practice.js?v=7"></script>
+
 </body>
 </html>
