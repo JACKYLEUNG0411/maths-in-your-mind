@@ -1,22 +1,23 @@
-async function loadLevelsPage() {
+async function loadGalaxy() {
   const user = await requireLogin();
-
   if (!user) return;
 
   const [
-    levelsResponse,
-    questionsResponse,
-    answersResponse,
+    planetsResult,
+    questionsResult,
+    answersResult,
     summary
   ] = await Promise.all([
     window.db
       .from("levels")
       .select("*")
-      .order("id"),
+      .order("planet_order"),
 
     window.db
       .from("questions")
-      .select("id, level_id, question_order")
+      .select(
+        "id, level_id, question_order"
+      )
       .order("level_id")
       .order("question_order"),
 
@@ -30,171 +31,424 @@ async function loadLevelsPage() {
   ]);
 
   if (
-    levelsResponse.error ||
-    questionsResponse.error ||
-    answersResponse.error
+    planetsResult.error ||
+    questionsResult.error ||
+    answersResult.error ||
+    !summary
   ) {
-    console.error(
-      levelsResponse.error,
-      questionsResponse.error,
-      answersResponse.error
-    );
-
     document.getElementById(
-      "levelGrid"
+      "galaxyMap"
     ).innerHTML = `
-      <div class="message error">
-        任務資料載入失敗，請重新整理。
-      </div>
+      <p class="message error">
+        銀河資料載入失敗，請重新整理。
+      </p>
     `;
-
     return;
   }
 
-  const levels = levelsResponse.data;
-  const questions = questionsResponse.data;
-  const answers = answersResponse.data;
+  const planets = planetsResult.data;
+  const questions = questionsResult.data;
+  const answers = answersResult.data;
 
-  const answeredIds =
-    new Set(
-      answers.map(
-        (answer) => answer.question_id
-      )
-    );
+  const answerMap = new Map(
+    answers.map((answer) => [
+      answer.question_id,
+      answer
+    ])
+  );
 
   document.getElementById(
     "playerName"
-  ).textContent =
-    summary?.display_name || "探索者";
+  ).textContent = summary.display_name;
 
   document.getElementById(
     "playerScore"
-  ).textContent =
-    summary?.score || 0;
+  ).textContent = summary.score;
 
   document.getElementById(
-    "totalProgress"
+    "planetProgress"
   ).textContent =
-    `${answers.length} / ${questions.length}`;
+    `${summary.completed_planets} / ${summary.total_planets}`;
 
-  const levelGrid =
-    document.getElementById("levelGrid");
+  document.getElementById(
+    "questionProgress"
+  ).textContent =
+    `${summary.answered} / ${summary.total_questions}`;
 
-  levelGrid.innerHTML = "";
+  renderShip(summary);
+  renderGalaxy(
+    planets,
+    questions,
+    answerMap,
+    summary
+  );
+}
 
-  levels.forEach((level) => {
-    const levelQuestions =
+function renderShip(summary) {
+  document.getElementById(
+    "shipVisual"
+  ).innerHTML = createShipHTML(summary);
+
+  document.getElementById(
+    "shipName"
+  ).textContent = summary.ship_name;
+
+  document.getElementById(
+    "shipNameInput"
+  ).value = summary.ship_name;
+
+  document.getElementById(
+    "shipModel"
+  ).textContent = summary.ship_model;
+
+  document.getElementById(
+    "shipLevel"
+  ).textContent = `LV.${summary.ship_level}`;
+
+  document.getElementById(
+    "shipXP"
+  ).textContent = `${summary.experience} XP`;
+
+  const nextXP =
+    Number(summary.next_level_xp || 100);
+
+  const percent =
+    summary.experience >= nextXP
+      ? 100
+      : Math.min(
+          100,
+          summary.experience / nextXP * 100
+        );
+
+  document.getElementById(
+    "xpBar"
+  ).style.width = `${percent}%`;
+
+  document.getElementById(
+    "nextXP"
+  ).textContent =
+    summary.ship_level >= 6
+      ? "飛船已達目前最高進化階段"
+      : `下一次進化需要 ${nextXP} XP`;
+}
+
+function renderGalaxy(
+  planets,
+  questions,
+  answerMap,
+  summary
+) {
+  const map =
+    document.getElementById("galaxyMap");
+
+  map.innerHTML = "";
+
+  const publishedPlanets =
+    planets.filter(
+      (planet) => planet.is_published
+    );
+
+  let currentPlanet = null;
+
+  planets.forEach((planet, index) => {
+    const planetQuestions =
       questions.filter(
         (question) =>
-          question.level_id === level.id
+          question.level_id === planet.id
       );
 
     const completed =
-      levelQuestions.filter(
+      planetQuestions.filter(
         (question) =>
-          answeredIds.has(question.id)
+          answerMap.has(question.id)
       ).length;
 
-    const previousQuestions =
-      questions.filter(
-        (question) =>
-          question.level_id < level.id
+    const score =
+      planetQuestions.reduce(
+        (total, question) =>
+          total +
+          Number(
+            answerMap.get(question.id)
+              ?.points_awarded || 0
+          ),
+        0
+      );
+
+    const previousPublished =
+      publishedPlanets.filter(
+        (item) =>
+          item.planet_order <
+          planet.planet_order
       );
 
     const unlocked =
-      level.id === 1 ||
-      previousQuestions.every(
-        (question) =>
-          answeredIds.has(question.id)
+      planet.is_published &&
+      previousPublished.every(
+        (previousPlanet) => {
+          const previousQuestions =
+            questions.filter(
+              (question) =>
+                question.level_id ===
+                previousPlanet.id
+            );
+
+          return (
+            previousQuestions.length > 0 &&
+            previousQuestions.every(
+              (question) =>
+                answerMap.has(question.id)
+            )
+          );
+        }
       );
 
     const finished =
-      levelQuestions.length > 0 &&
-      completed === levelQuestions.length;
+      planet.is_published &&
+      planetQuestions.length > 0 &&
+      completed === planetQuestions.length;
 
-    const progress =
-      levelQuestions.length
-        ? completed / levelQuestions.length * 100
-        : 0;
-
-    const card =
-      document.createElement("article");
-
-    card.className =
-      `mission-card color-${level.color}` +
-      (!unlocked ? " locked" : "") +
-      (finished ? " completed" : "");
-
-    let statusText = "任務執行中";
-
-    if (!unlocked) {
-      statusText = "能量鎖定";
-    } else if (finished) {
-      statusText = "任務完成";
-    } else if (completed === 0) {
-      statusText = "可以開始";
+    if (
+      !currentPlanet &&
+      planet.is_published &&
+      unlocked &&
+      !finished
+    ) {
+      currentPlanet = planet;
     }
 
-    card.innerHTML = `
-      <div class="mission-top">
-        <span>
-          MISSION ${String(level.id).padStart(2, "0")}
-        </span>
-        <strong>${statusText}</strong>
-      </div>
+    const state =
+      !planet.is_published
+        ? "coming"
+        : finished
+          ? "completed"
+          : unlocked
+            ? "active"
+            : "locked";
 
-      <div class="mission-icon">
-        ${unlocked ? level.id : "⌁"}
-      </div>
+    const routeItem =
+      document.createElement("article");
 
-      <h3>${escapeHTML(level.name)}</h3>
+    routeItem.className =
+      `galaxy-route-item route-${index % 2 ? "right" : "left"} ${state}`;
 
-      <p>${escapeHTML(level.description)}</p>
+    const statusText = {
+      coming: "COMING SOON",
+      completed: "PLANET CLEARED",
+      active: completed
+        ? "EXPLORATION ACTIVE"
+        : "READY TO EXPLORE",
+      locked: "ROUTE LOCKED"
+    }[state];
 
-      <div class="mission-progress">
-        <div>
-          <span>任務進度</span>
-          <strong>
-            ${completed} / ${levelQuestions.length}
-          </strong>
-        </div>
-
-        <div class="progress-track">
-          <i style="width:${progress}%"></i>
-        </div>
-      </div>
-
-      ${
-        unlocked
+    const button =
+      state === "completed"
+        ? `
+          <a
+            class="game-button lime small"
+            href="practice.html?level=${planet.id}"
+          >
+            查看探索紀錄
+          </a>
+        `
+        : state === "active"
           ? `
             <a
-              class="button primary full"
-              href="practice.html?level=${level.id}"
+              class="game-button cyan small"
+              href="practice.html?level=${planet.id}"
             >
-              ${
-                finished
-                  ? "查看任務紀錄"
-                  : completed > 0
-                    ? "繼續任務"
-                    : "開始任務"
-              }
+              ${completed ? "繼續探索" : "登陸星球"}
             </a>
           `
           : `
             <button
-              class="button secondary full"
-              type="button"
+              class="game-button disabled small"
               disabled
             >
-              完成上一關後解鎖
+              ${
+                state === "coming"
+                  ? "航線建造中"
+                  : "完成前置星球"
+              }
             </button>
-          `
-      }
+          `;
+
+    routeItem.innerHTML = `
+      <div class="route-line ${state}"></div>
+
+      <div class="planet-system">
+        ${
+          state === "active" &&
+          currentPlanet?.id === planet.id
+            ? `
+              <div class="map-player-ship">
+                ${createShipHTML(summary, true)}
+              </div>
+            `
+            : ""
+        }
+
+        <div
+          class="planet-sphere planet-${escapeHTML(
+            planet.planet_style
+          )}"
+        >
+          <div class="planet-surface"></div>
+          <div class="planet-orbit"></div>
+          ${
+            state === "locked"
+              ? '<span class="planet-lock">🔒</span>'
+              : ""
+          }
+          ${
+            state === "coming"
+              ? '<span class="planet-lock">?</span>'
+              : ""
+          }
+          ${
+            state === "completed"
+              ? '<span class="planet-complete">✓</span>'
+              : ""
+          }
+        </div>
+
+        <div class="planet-card">
+          <p class="planet-code">
+            ${escapeHTML(planet.english_name)}
+            // ${escapeHTML(planet.coordinates)}
+          </p>
+
+          <span class="planet-status">
+            ${statusText}
+          </span>
+
+          <h3>${escapeHTML(planet.name)}</h3>
+
+          <p>${escapeHTML(planet.description)}</p>
+
+          <div class="planet-stats">
+            <div>
+              <span>探索區域</span>
+              <strong>
+                ${completed} /
+                ${planetQuestions.length || 5}
+              </strong>
+            </div>
+
+            <div>
+              <span>星球能量</span>
+              <strong>
+                ${score} /
+                ${
+                  planetQuestions.reduce(
+                    (sum, question) =>
+                      sum + 5,
+                    0
+                  ) || 25
+                }
+              </strong>
+            </div>
+          </div>
+
+          <div class="progress-track">
+            <i style="width:${
+              planetQuestions.length
+                ? completed /
+                  planetQuestions.length *
+                  100
+                : 0
+            }%"></i>
+          </div>
+
+          ${button}
+        </div>
+      </div>
     `;
 
-    levelGrid.appendChild(card);
+    map.appendChild(routeItem);
   });
+
+  const objective =
+    currentPlanet ||
+    publishedPlanets[
+      publishedPlanets.length - 1
+    ];
+
+  if (currentPlanet) {
+    document.getElementById(
+      "currentObjective"
+    ).textContent =
+      `目前目標：探索 ${currentPlanet.name}`;
+
+    document.getElementById(
+      "novaMessage"
+    ).textContent =
+      `導航已鎖定 ${currentPlanet.english_name}。完成 5 個區域即可開啟下一條航線。`;
+  } else {
+    document.getElementById(
+      "currentObjective"
+    ).textContent =
+      "所有目前開放星球已完成！";
+
+    document.getElementById(
+      "novaMessage"
+    ).textContent =
+      "出色的探索成果。新的數學星區正在建造中。";
+  }
 }
 
-loadLevelsPage();
+document
+  .getElementById("renameShip")
+  .addEventListener("click", async () => {
+    const input =
+      document.getElementById(
+        "shipNameInput"
+      );
 
+    const message =
+      document.getElementById(
+        "shipMessage"
+      );
+
+    const shipName =
+      input.value.trim();
+
+    if (!shipName) {
+      showMessage(
+        message,
+        "請輸入飛船名稱。",
+        "error"
+      );
+      return;
+    }
+
+    const { data, error } =
+      await window.db.rpc(
+        "rename_my_ship",
+        {
+          p_ship_name: shipName
+        }
+      );
+
+    if (error) {
+      showMessage(
+        message,
+        error.message,
+        "error"
+      );
+      return;
+    }
+
+    document.getElementById(
+      "shipName"
+    ).textContent = data.ship_name;
+
+    showMessage(
+      message,
+      "飛船名稱已更新。",
+      "success"
+    );
+
+    playTone(650, 0.12, "square");
+  });
+
+loadGalaxy();
