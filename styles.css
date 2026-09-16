@@ -3298,3 +3298,166 @@ footer {
     flex-direction: column;
   }
 }
+/* =========================================================
+   Practice UI bug fix
+   強制覆蓋舊版正確答案及解題步驟樣式
+   必須放在 styles.css 最底部
+   ========================================================= */
+
+/* 正確答案外層 */
+.practice-universe-body .verified-answer-section {
+  display: block !important;
+  padding: 18px !important;
+  border: 1px solid rgba(52, 211, 153, 0.5) !important;
+  border-radius: 16px !important;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(52, 211, 153, 0.14),
+      rgba(52, 211, 153, 0) 48%
+    ),
+    #082f38 !important;
+}
+
+/* 「VERIFIED ANSWER」和「正確答案」文字 */
+.practice-universe-body .verified-answer-heading {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.practice-universe-body .verified-answer-heading p {
+  margin: 0 0 3px !important;
+  color: #78f0c2 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.13em !important;
+}
+
+.practice-universe-body .verified-answer-heading h3 {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+}
+
+/*
+  正確答案大方框。
+  使用 !important 是為了覆蓋你先前 styles.css
+  可能存在的 #correctAnswer 舊規則。
+*/
+.practice-universe-body #correctAnswer.correct-answer-box,
+.practice-universe-body #correctAnswer {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 82px !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  margin: 16px 0 0 !important;
+  padding: 14px 20px !important;
+
+  border: 2px solid #4df0ba !important;
+  border-radius: 14px !important;
+
+  background:
+    linear-gradient(
+      135deg,
+      #11685e 0%,
+      #093a42 55%,
+      #082a35 100%
+    ) !important;
+
+  box-shadow:
+    0 0 0 4px rgba(52, 211, 153, 0.1),
+    0 0 26px rgba(52, 211, 153, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+
+  color: #f1fff8 !important;
+  font-size: clamp(27px, 4vw, 36px) !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.25 !important;
+  text-align: center !important;
+
+  overflow-wrap: anywhere !important;
+}
+
+/*
+  解題步驟區域：
+  修正舊版白色背景與淡色文字。
+*/
+.practice-universe-body .solution-section {
+  margin-top: 17px !important;
+  padding: 17px !important;
+  border-top: 1px solid rgba(129, 140, 248, 0.25) !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 4px solid #818cf8 !important;
+  border-radius: 0 12px 12px 0 !important;
+  background: #182657 !important;
+}
+
+.practice-universe-body .solution-heading {
+  color: #f0f3ff !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+}
+
+/*
+  特別處理 solution 內由 Supabase HTML 產生的 p、strong 等元素。
+  你的截圖中白底是由舊樣式影響，因此要全部覆蓋。
+*/
+.practice-universe-body #solutionText,
+.practice-universe-body #solutionText p,
+.practice-universe-body #solutionText div,
+.practice-universe-body #solutionText span,
+.practice-universe-body #solutionText strong,
+.practice-universe-body #solutionText li {
+  box-sizing: border-box !important;
+  background: transparent !important;
+  color: #e5ebff !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 1.85 !important;
+  text-shadow: none !important;
+}
+
+.practice-universe-body #solutionText p {
+  margin: 0 0 10px !important;
+}
+
+.practice-universe-body #solutionText p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.practice-universe-body #solutionText strong {
+  color: #8bf3cc !important;
+  font-weight: 800 !important;
+}
+
+/* 答錯結果：使用比較柔和但清楚的橙黃色 */
+.practice-universe-body .result-status.result-incorrect {
+  color: #ffd28a !important;
+}
+
+/* 答對結果 */
+.practice-universe-body .result-status.result-correct {
+  color: #7df1c3 !important;
+}
+
+/* 答錯訊息字體清晰 */
+.practice-universe-body .answer-message.message-error {
+  border-color: #fb7185 !important;
+  background: #4a203c !important;
+  color: #ffe2e8 !important;
+}
+
+/* 答對訊息字體清晰 */
+.practice-universe-body .answer-message.message-success {
+  border-color: #34d399 !important;
+  background: #13594f !important;
+  color: #d7ffed !important;
+}
