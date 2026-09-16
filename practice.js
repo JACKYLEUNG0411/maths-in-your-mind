@@ -1,13 +1,18 @@
 (() => {
   "use strict";
 
-  const db = window.db;
+  const $ = (id) => document.getElementById(id);
 
+  let db = null;
   let currentUser = null;
   let currentLevel = null;
   let questions = [];
   let currentIndex = 0;
 
+  /*
+    已作答的題目會記錄於這裡。
+    每題在介面上只可提交一次。
+  */
   const submittedResults = new Map();
 
   const params = new URLSearchParams(
@@ -21,39 +26,42 @@
     1
   );
 
-  const $ = (id) => {
-    return document.getElementById(id);
-  };
-
   const elements = {
     levelName: $("levelName"),
     levelDescription: $("levelDescription"),
 
     progress: $("progress"),
     progressText: $("progressText"),
-
     questionNumber: $("questionNumber"),
-    questionTitle: $("questionTitle"),
-    questionText: $("questionText"),
 
-    hintText: $("hintText"),
-    topic: $("topic"),
+    zoneIcon: $("zoneIcon"),
     zoneName: $("zoneName"),
     zoneDescription: $("zoneDescription"),
+    topic: $("topic"),
     difficulty: $("difficulty"),
     points: $("points"),
 
+    questionTitle: $("questionTitle"),
+    questionText: $("questionText"),
+
+    toggleHint: $("toggleHint"),
+    hintButtonText: $("hintButtonText"),
+    hintContent: $("hintContent"),
+    hintText: $("hintText"),
+
     answerInput: $("answerInput"),
     submitAnswer: $("submitAnswer"),
-
-    previousQuestion: $("previousQuestion"),
-    nextQuestion: $("nextQuestion"),
-
     answerMessage: $("answerMessage"),
+
+    resultPanel: $("resultPanel"),
+    resultStatus: $("resultStatus"),
     correctAnswer: $("correctAnswer"),
     score: $("score"),
     xp: $("xp"),
     solutionText: $("solutionText"),
+
+    previousQuestion: $("previousQuestion"),
+    nextQuestion: $("nextQuestion"),
 
     loading: $("loading"),
     completedMessage: $("completedMessage")
@@ -66,7 +74,7 @@
 
   async function init() {
     try {
-      showLoading(true);
+      db = window.db;
 
       if (!db) {
         throw new Error(
@@ -79,11 +87,13 @@
         levelId <= 0
       ) {
         throw new Error(
-          "網址沒有有效的 level_id。"
+          "網址中沒有有效的 level_id。"
         );
       }
 
+      showLoading(true);
       bindEvents();
+
       await checkLogin();
       await loadLevel();
       await loadQuestions();
@@ -100,7 +110,7 @@
       console.error(error);
 
       showMessage(
-        error.message ||
+        error?.message ||
         "載入練習頁面時發生錯誤。",
         "error"
       );
@@ -129,8 +139,7 @@
       );
 
       setTimeout(() => {
-        window.location.href =
-          "login.html";
+        window.location.href = "login.html";
       }, 1200);
 
       throw new Error("尚未登入。");
@@ -207,6 +216,11 @@
       : [];
   }
 
+  /*
+    載入學生過往已提交的答案。
+    若資料庫函式對尚未作答題目回傳空值，
+    會直接略過，不影響整個頁面。
+  */
   async function loadSubmittedAnswers() {
     submittedResults.clear();
 
@@ -224,14 +238,13 @@
 
         if (error) {
           console.warn(
-            `讀取題目 ${question.id} 的答案紀錄失敗：`,
+            `讀取題目 ${question.id} 作答紀錄失敗：`,
             error.message
           );
           continue;
         }
 
-        const result =
-          unwrapRpcResult(data);
+        const result = unwrapRpcResult(data);
 
         if (result) {
           submittedResults.set(
@@ -261,6 +274,11 @@
       showNextQuestion
     );
 
+    elements.toggleHint?.addEventListener(
+      "click",
+      toggleHint
+    );
+
     elements.answerInput?.addEventListener(
       "keydown",
       (event) => {
@@ -276,8 +294,7 @@
   }
 
   function renderQuestion() {
-    const question =
-      questions[currentIndex];
+    const question = questions[currentIndex];
 
     if (!question) {
       showCompleted();
@@ -286,15 +303,48 @@
 
     clearMessage();
     clearResult();
+    closeHint();
 
     setText(
       elements.questionNumber,
-      `第 ${currentIndex + 1} 題`
+      `任務 ${currentIndex + 1} / ${questions.length}`
     );
 
     setText(
       elements.progressText,
-      `${currentIndex + 1} / ${questions.length}`
+      `已進入第 ${currentIndex + 1} 個挑戰任務`
+    );
+
+    setText(
+      elements.zoneIcon,
+      question.zone_icon || "◆"
+    );
+
+    setText(
+      elements.zoneName,
+      question.zone_name || "未知區域"
+    );
+
+    setText(
+      elements.zoneDescription,
+      question.zone_description || ""
+    );
+
+    setText(
+      elements.topic,
+      question.topic ||
+      question.dse_topic ||
+      "數學任務"
+    );
+
+    setText(
+      elements.difficulty,
+      getDifficultyText(question.difficulty)
+    );
+
+    setText(
+      elements.points,
+      `✦ +${question.points ?? 5} 分`
     );
 
     setText(
@@ -310,36 +360,7 @@
 
     setText(
       elements.hintText,
-      question.hint || "暫無提示"
-    );
-
-    setText(
-      elements.topic,
-      question.topic ||
-      question.dse_topic ||
-      ""
-    );
-
-    setText(
-      elements.zoneName,
-      question.zone_name || ""
-    );
-
-    setText(
-      elements.zoneDescription,
-      question.zone_description || ""
-    );
-
-    setText(
-      elements.difficulty,
-      question.difficulty
-        ? `難度 ${question.difficulty}`
-        : ""
-    );
-
-    setText(
-      elements.points,
-      `${question.points ?? 5} 分`
+      question.hint || "這道題暫時沒有額外提示。"
     );
 
     if (elements.answerInput) {
@@ -349,8 +370,8 @@
 
     if (elements.submitAnswer) {
       elements.submitAnswer.disabled = false;
-      elements.submitAnswer.textContent =
-        "提交答案";
+      elements.submitAnswer.innerHTML =
+        '<span aria-hidden="true">✦</span> 提交答案';
     }
 
     updateProgress();
@@ -364,15 +385,25 @@
     }
   }
 
+  function getDifficultyText(difficulty) {
+    const level = Number(difficulty) || 1;
+    const filled = "●".repeat(
+      Math.min(Math.max(level, 1), 3)
+    );
+    const empty = "○".repeat(
+      Math.max(3 - Math.min(Math.max(level, 1), 3), 0)
+    );
+
+    return `難度 ${filled}${empty}`;
+  }
+
   function updateProgress() {
-    if (!elements.progress) {
+    if (!elements.progress || questions.length === 0) {
       return;
     }
 
     const percentage =
-      ((currentIndex + 1) /
-        questions.length) *
-      100;
+      ((currentIndex + 1) / questions.length) * 100;
 
     elements.progress.style.width =
       `${percentage}%`;
@@ -390,17 +421,70 @@
     }
   }
 
+  function toggleHint() {
+    if (
+      !elements.hintContent ||
+      !elements.toggleHint
+    ) {
+      return;
+    }
+
+    const isOpen =
+      !elements.hintContent.hidden;
+
+    elements.hintContent.hidden = isOpen;
+
+    elements.toggleHint.setAttribute(
+      "aria-expanded",
+      String(!isOpen)
+    );
+
+    if (elements.hintButtonText) {
+      elements.hintButtonText.textContent = isOpen
+        ? "使用提示"
+        : "收起提示";
+    }
+
+    elements.toggleHint.classList.toggle(
+      "is-open",
+      !isOpen
+    );
+  }
+
+  function closeHint() {
+    if (elements.hintContent) {
+      elements.hintContent.hidden = true;
+    }
+
+    if (elements.toggleHint) {
+      elements.toggleHint.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+
+      elements.toggleHint.classList.remove(
+        "is-open"
+      );
+    }
+
+    if (elements.hintButtonText) {
+      elements.hintButtonText.textContent =
+        "使用提示";
+    }
+  }
+
   async function submitCurrentAnswer() {
-    const question =
-      questions[currentIndex];
+    const question = questions[currentIndex];
 
     if (!question) {
       return;
     }
 
-    if (
-      submittedResults.has(question.id)
-    ) {
+    /*
+      前端禁止再次提交；
+      資料庫函式 submit_answer 亦應保留防重複提交邏輯。
+    */
+    if (submittedResults.has(question.id)) {
       showExistingResult(
         submittedResults.get(question.id)
       );
@@ -412,7 +496,7 @@
 
     if (!answer) {
       showMessage(
-        "請先輸入答案。",
+        "請先輸入你的答案。",
         "error"
       );
 
@@ -459,10 +543,26 @@
       setSubmitting(false);
 
       showMessage(
-        error.message ||
-        "提交答案時發生錯誤。",
+        error?.message ||
+        "提交答案時發生錯誤，請稍後再試。",
         "error"
       );
+    }
+  }
+
+  function setSubmitting(isSubmitting) {
+    if (elements.answerInput) {
+      elements.answerInput.disabled =
+        isSubmitting;
+    }
+
+    if (elements.submitAnswer) {
+      elements.submitAnswer.disabled =
+        isSubmitting;
+
+      elements.submitAnswer.innerHTML = isSubmitting
+        ? '<span aria-hidden="true">◌</span> 正在驗證答案…'
+        : '<span aria-hidden="true">✦</span> 提交答案';
     }
   }
 
@@ -475,8 +575,8 @@
 
     if (elements.submitAnswer) {
       elements.submitAnswer.disabled = true;
-      elements.submitAnswer.textContent =
-        "已提交";
+      elements.submitAnswer.innerHTML =
+        '<span aria-hidden="true">✓</span> 已提交答案';
     }
 
     showResult(result);
@@ -499,19 +599,44 @@
 
     if (isCorrect) {
       showMessage(
-        `答對了！獲得 ${points} 分。`,
+        `任務成功！你獲得了 ${points} 分。`,
         "success"
+      );
+
+      setText(
+        elements.resultStatus,
+        "✓ 回答正確 · 任務訊號已確認"
+      );
+
+      elements.resultStatus?.classList.remove(
+        "result-incorrect"
+      );
+
+      elements.resultStatus?.classList.add(
+        "result-correct"
       );
     } else {
       showMessage(
-        "答案不正確，請查看解題步驟。",
+        "這次答案未正確。請參考正確答案及解題步驟。",
         "error"
+      );
+
+      setText(
+        elements.resultStatus,
+        "⌁ 任務分析完成 · 參考以下正確答案"
+      );
+
+      elements.resultStatus?.classList.remove(
+        "result-correct"
+      );
+
+      elements.resultStatus?.classList.add(
+        "result-incorrect"
       );
     }
 
     /*
-      正確答案使用 textContent，
-      CSS 會替它加上醒目的綠色方框。
+      正確答案以 textContent 輸出，不會執行答案字串中的 HTML。
     */
     setText(
       elements.correctAnswer,
@@ -527,14 +652,31 @@
 
     setText(
       elements.xp,
-      xp ? `+${xp} XP` : ""
+      xp ? `+${xp} XP` : "0 XP"
     );
 
     if (elements.solutionText) {
+      /*
+        solution 是教師／管理員預先寫入的解題內容。
+      */
       elements.solutionText.innerHTML =
         result.solution ||
         result.explanation ||
         "<p>暫無解題步驟。</p>";
+    }
+
+    if (elements.resultPanel) {
+      elements.resultPanel.hidden = false;
+    }
+
+    if (elements.answerInput) {
+      elements.answerInput.disabled = true;
+    }
+
+    if (elements.submitAnswer) {
+      elements.submitAnswer.disabled = true;
+      elements.submitAnswer.innerHTML =
+        '<span aria-hidden="true">✓</span> 已提交答案';
     }
   }
 
@@ -545,35 +687,39 @@
 
     currentIndex -= 1;
     renderQuestion();
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
 
   function showNextQuestion() {
-    if (
-      currentIndex >= questions.length - 1
-    ) {
+    if (currentIndex >= questions.length - 1) {
       return;
     }
 
     currentIndex += 1;
     renderQuestion();
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   }
 
   function showCompleted() {
     if (elements.completedMessage) {
       elements.completedMessage.hidden = false;
-      elements.completedMessage.textContent =
-        "恭喜你完成這個星球的全部題目！";
+      elements.completedMessage.innerHTML = `
+        <span class="completed-icon">✦</span>
+        <div>
+          <p>PLANET MISSION COMPLETE</p>
+          <h2>恭喜你完成這個星球的全部題目！</h2>
+          <a href="levels.html">返回星球地圖</a>
+        </div>
+      `;
     }
-
-    setText(
-      elements.questionTitle,
-      "星球任務完成"
-    );
-
-    setText(
-      elements.questionText,
-      "你已完成這個星球的所有題目。"
-    );
 
     if (elements.answerInput) {
       elements.answerInput.disabled = true;
@@ -584,27 +730,22 @@
     }
   }
 
-  function setSubmitting(isSubmitting) {
-    if (elements.answerInput) {
-      elements.answerInput.disabled =
-        isSubmitting;
+  function clearResult() {
+    if (elements.resultPanel) {
+      elements.resultPanel.hidden = true;
     }
 
-    if (elements.submitAnswer) {
-      elements.submitAnswer.disabled =
-        isSubmitting;
-
-      elements.submitAnswer.textContent =
-        isSubmitting
-          ? "提交中……"
-          : "提交答案";
+    if (elements.resultStatus) {
+      elements.resultStatus.textContent = "";
+      elements.resultStatus.className = "result-status";
     }
-  }
 
-  function showLoading(isLoading) {
-    if (elements.loading) {
-      elements.loading.hidden =
-        !isLoading;
+    setText(elements.correctAnswer, "");
+    setText(elements.score, "");
+    setText(elements.xp, "");
+
+    if (elements.solutionText) {
+      elements.solutionText.innerHTML = "";
     }
   }
 
@@ -640,24 +781,9 @@
     }
   }
 
-  function clearResult() {
-    setText(
-      elements.correctAnswer,
-      ""
-    );
-
-    setText(
-      elements.score,
-      ""
-    );
-
-    setText(
-      elements.xp,
-      ""
-    );
-
-    if (elements.solutionText) {
-      elements.solutionText.innerHTML = "";
+  function showLoading(isLoading) {
+    if (elements.loading) {
+      elements.loading.hidden = !isLoading;
     }
   }
 
