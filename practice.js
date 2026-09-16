@@ -566,51 +566,66 @@
     showResult(result);
   }
 
-  function showResult(result) {
-    const isCorrect =
-      result.is_correct === true ||
-      result.correct === true;
+ function showResult(result) {
+  const isCorrect =
+    result.is_correct === true ||
+    result.correct === true;
 
-    const points =
-      result.points_awarded ??
-      result.points ??
-      (isCorrect ? 5 : 0);
+  const points =
+    result.points_awarded ??
+    result.points ??
+    (isCorrect ? 5 : 0);
 
-    const awardedXp =
-      result.xp_awarded ??
-      result.xp ??
-      0;
+  const xp =
+    result.xp_awarded ??
+    result.xp ??
+    0;
 
-    if (isCorrect) {
-      showMessage(
-        `答對了！獲得 ${points} 分。`,
-        "success"
-      );
-    } else {
-      showMessage(
-        "答案不正確，請查看下面的解題步驟。",
-        "error"
-      );
-    }
-
-    setText(
-      els.correctAnswer,
-      result.correct_answer ||
-      result.answer ||
-      ""
+  if (isCorrect) {
+    showMessage(
+      `答對了！獲得 ${points} 分。`,
+      "success"
     );
-
-    setText(
-      els.score,
-      `${points} 分`
+  } else {
+    showMessage(
+      "答案不正確，請查看解題步驟。",
+      "error"
     );
+  }
 
-    if (awardedXp > 0) {
-      setText(
-        els.xp,
-        `+${awardedXp} XP`
-      );
-    }
+  /*
+    正確答案使用 textContent，
+    避免答案內容被當成 HTML 執行。
+    CSS 會自動為它加上綠色 Highlight 方框。
+  */
+  setText(
+    elements.correctAnswer,
+    result.correct_answer ||
+    result.answer ||
+    "暫無資料"
+  );
+
+  setText(
+    elements.score,
+    `${points} 分`
+  );
+
+  setText(
+    elements.xp,
+    xp ? `+${xp} XP` : ""
+  );
+
+  if (elements.solutionText) {
+    /*
+      solution 由資料庫提供，保留 HTML 解題格式。
+    */
+    elements.solutionText.innerHTML =
+      result.solution ||
+      result.explanation ||
+      "<p>暫無解題步驟。</p>";
+  }
+}
+
 
     if (els.solution) {
       /*
