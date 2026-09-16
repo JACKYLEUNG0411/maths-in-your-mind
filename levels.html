@@ -1,1 +1,89 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <title>任務地圖｜心中有數</title>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="space-background" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="logo" href="index.html">
+        <span class="logo-core">數</span>
+        <span>
+          心中有數
+          <small>DSE MATH MISSION</small>
+        </span>
+      </a>
+
+      <nav>
+        <a href="levels.html" class="active">任務地圖</a>
+        <a href="leaderboard.html">排行榜</a>
+        <button data-logout type="button">登出</button>
+      </nav>
+    </header>
+
+    <main class="page-container">
+      <section class="dashboard-header">
+        <div>
+          <p class="system-label">
+            MISSION CONTROL
+          </p>
+
+          <h1>
+            歡迎，<span id="playerName">探索者</span>
+          </h1>
+
+          <p>
+            選擇已解鎖的任務。每完成五題，
+            下一個數學區域便會開放。
+          </p>
+        </div>
+
+        <div class="score-module">
+          <span>累計能量分數</span>
+          <strong id="playerScore">0</strong>
+          <small>POINTS</small>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-title">
+          <div>
+            <p class="system-label">
+              AVAILABLE MISSIONS
+            </p>
+            <h2>星際任務地圖</h2>
+          </div>
+
+          <div class="mini-stat">
+            已完成
+            <strong id="totalProgress">0 / 20</strong>
+          </div>
+        </div>
+
+        <div
+          id="levelGrid"
+          class="mission-grid"
+        >
+          <p>正在載入任務資料...</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="levels.js"></script>
+  </body>
+</html>
 
