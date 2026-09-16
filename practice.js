@@ -1,109 +1,32 @@
-let currentLevel = null;
+let planet;
+let allPlanets = [];
 let questions = [];
 let activeIndex = 0;
 let answerMap = new Map();
 let pendingAnswer = "";
 
-const levelCode =
-  document.getElementById("levelCode");
-
-const levelName =
-  document.getElementById("levelName");
-
-const playerName =
-  document.getElementById("playerName");
-
-const playerScore =
-  document.getElementById("playerScore");
-
-const navigation =
-  document.getElementById("questionNavigation");
-
-const questionTopic =
-  document.getElementById("questionTopic");
-
-const questionNumber =
-  document.getElementById("questionNumber");
-
-const questionTitle =
-  document.getElementById("questionTitle");
-
-const questionText =
-  document.getElementById("questionText");
-
-const answerInput =
-  document.getElementById("answerInput");
-
-const submitAnswer =
-  document.getElementById("submitAnswer");
-
-const showHint =
-  document.getElementById("showHint");
-
-const hintText =
-  document.getElementById("hintText");
-
-const answerMessage =
-  document.getElementById("answerMessage");
-
-const resultPanel =
-  document.getElementById("resultPanel");
-
-const resultTitle =
-  document.getElementById("resultTitle");
-
-const submittedAnswer =
-  document.getElementById("submittedAnswer");
-
-const correctAnswer =
-  document.getElementById("correctAnswer");
-
-const awardedPoints =
-  document.getElementById("awardedPoints");
-
-const solutionText =
-  document.getElementById("solutionText");
-
-const previousQuestion =
-  document.getElementById("previousQuestion");
-
-const nextQuestion =
-  document.getElementById("nextQuestion");
-
-const confirmDialog =
-  document.getElementById("confirmDialog");
-
-const cancelSubmit =
-  document.getElementById("cancelSubmit");
-
-const confirmSubmit =
-  document.getElementById("confirmSubmit");
-
+const $ = (id) => document.getElementById(id);
 
 async function initialisePractice() {
   const user = await requireLogin();
-
   if (!user) return;
 
-  const parameters =
-    new URLSearchParams(location.search);
+  const levelId = Number(
+    new URLSearchParams(location.search)
+      .get("level")
+  );
 
-  const levelId =
-    Number(parameters.get("level") || 1);
-
-  if (
-    !Number.isInteger(levelId) ||
-    levelId < 1
-  ) {
+  if (!Number.isInteger(levelId)) {
     location.href = "levels.html";
     return;
   }
 
   const [
-    levelResponse,
-    questionResponse,
-    allQuestionsResponse,
-    answerResponse,
+    planetResult,
+    planetsResult,
+    questionsResult,
+    allQuestionsResult,
+    answersResult,
     summary
   ] = await Promise.all([
     window.db
@@ -111,6 +34,12 @@ async function initialisePractice() {
       .select("*")
       .eq("id", levelId)
       .single(),
+
+    window.db
+      .from("levels")
+      .select("*")
+      .eq("is_published", true)
+      .order("planet_order"),
 
     window.db
       .from("questions")
@@ -132,74 +61,74 @@ async function initialisePractice() {
   ]);
 
   if (
-    levelResponse.error ||
-    questionResponse.error ||
-    allQuestionsResponse.error ||
-    answerResponse.error
+    planetResult.error ||
+    planetsResult.error ||
+    questionsResult.error ||
+    answersResult.error
   ) {
-    console.error(
-      levelResponse.error,
-      questionResponse.error,
-      allQuestionsResponse.error,
-      answerResponse.error
-    );
-
     showMessage(
-      answerMessage,
-      "題目載入失敗，請返回任務地圖再試。",
+      $("answerMessage"),
+      "探索資料載入失敗。",
       "error"
     );
-
     return;
   }
 
-  const answeredIds =
-    new Set(
-      answerResponse.data.map(
-        (answer) => answer.question_id
-      )
-    );
+  planet = planetResult.data;
+  allPlanets = planetsResult.data;
+  questions = questionsResult.data;
 
-  const previousQuestions =
-    allQuestionsResponse.data.filter(
-      (question) =>
-        question.level_id < levelId
-    );
-
-  const unlocked =
-    levelId === 1 ||
-    previousQuestions.every(
-      (question) =>
-        answeredIds.has(question.id)
-    );
-
-  if (!unlocked) {
-    alert("請先完成前面的關卡。");
+  if (!planet.is_published) {
+    alert("這顆星球尚未開放。");
     location.href = "levels.html";
     return;
   }
 
-  currentLevel = levelResponse.data;
-  questions = questionResponse.data;
-
-  answerResponse.data.forEach((answer) => {
-    answerMap.set(
-      answer.question_id,
-      answer
-    );
+  answersResult.data.forEach((answer) => {
+    answerMap.set(answer.question_id, answer);
   });
 
-  levelCode.textContent =
-    `MISSION ${String(levelId).padStart(2, "0")}`;
+  const previousPlanets =
+    allPlanets.filter(
+      (item) =>
+        item.planet_order < planet.planet_order
+    );
 
-  levelName.textContent =
-    currentLevel.name;
+  const unlocked =
+    previousPlanets.every((previous) => {
+      const previousQuestions =
+        allQuestionsResult.data.filter(
+          (question) =>
+            question.level_id === previous.id
+        );
 
-  playerName.textContent =
-    summary?.display_name || "探索者";
+      return (
+        previousQuestions.length > 0 &&
+        previousQuestions.every(
+          (question) =>
+            answerMap.has(question.id)
+        )
+      );
+    });
 
-  playerScore.textContent =
-    summary?.score || 0;
+  if (!unlocked) {
+    alert("請先完成前面的星球。");
+    location.href = "levels.html";
+    return;
+  }
+
+  $("planetCode").textContent =
+    `${planet.english_name} // ${planet.coordinates}`;
+
+  $("planetName").textContent = planet.name;
+  $("playerName").textContent =
+    summary.display_name;
+
+  $("playerScore").textContent =
+    summary.score;
+
+  $("shipLevel").textContent =
+    `LV.${summary.ship_level}`;
 
   const firstUnanswered =
     questions.findIndex(
@@ -216,12 +145,14 @@ async function initialisePractice() {
   await loadQuestion(activeIndex);
 }
 
-
 function renderNavigation() {
+  const navigation =
+    $("questionNavigation");
+
   navigation.innerHTML = "";
 
   questions.forEach((question, index) => {
-    const existing =
+    const result =
       answerMap.get(question.id);
 
     const button =
@@ -230,85 +161,87 @@ function renderNavigation() {
     button.type = "button";
 
     button.className =
-      "question-nav-button" +
+      "zone-nav" +
       (index === activeIndex ? " active" : "") +
-      (existing ? " answered" : "") +
-      (existing?.is_correct ? " correct" : "") +
-      (
-        existing && !existing.is_correct
-          ? " wrong"
-          : ""
-      );
+      (result ? " answered" : "") +
+      (result?.is_correct ? " correct" : "") +
+      (result && !result.is_correct
+        ? " wrong"
+        : "");
 
     button.innerHTML = `
       <span>${index + 1}</span>
       <div>
         <strong>
-          ${escapeHTML(question.title)}
+          ${escapeHTML(question.zone_name)}
         </strong>
         <small>
           ${
-            existing
-              ? existing.is_correct
-                ? "已提交・+5"
-                : "已提交・+0"
-              : "等待作答"
+            result
+              ? result.is_correct
+                ? "區域完成・+5"
+                : "區域完成・+0"
+              : "等待探索"
           }
         </small>
       </div>
     `;
 
-    button.addEventListener("click", async () => {
-      activeIndex = index;
-      renderNavigation();
-      await loadQuestion(index);
-    });
+    button.addEventListener(
+      "click",
+      async () => {
+        activeIndex = index;
+        await loadQuestion(index);
+      }
+    );
 
     navigation.appendChild(button);
   });
 }
 
-
 async function loadQuestion(index) {
   const question = questions[index];
-
   if (!question) return;
 
   activeIndex = index;
   renderNavigation();
 
-  questionTopic.textContent =
+  $("zoneName").textContent =
+    `探索區域 ${index + 1}：${question.zone_name}`;
+
+  $("questionTopic").textContent =
     question.topic;
 
-  questionNumber.textContent =
+  $("questionNumber").textContent =
     `${index + 1} / ${questions.length}`;
 
-  questionTitle.textContent =
+  $("questionTitle").textContent =
     question.title;
 
-  questionText.textContent =
+  $("questionText").textContent =
     question.question_text;
 
-  hintText.textContent =
+  $("hintText").textContent =
     question.hint;
 
-  hintText.hidden = true;
-  showHint.textContent = "顯示任務提示";
+  $("hintText").hidden = true;
+  $("showHint").textContent =
+    "啟動掃描提示";
 
-  answerInput.value = "";
-  answerInput.disabled = false;
+  $("answerInput").value = "";
+  $("answerInput").disabled = false;
 
-  submitAnswer.disabled = false;
-  submitAnswer.textContent = "正式提交";
+  $("submitAnswer").disabled = false;
+  $("submitAnswer").textContent =
+    "正式提交";
 
-  showMessage(answerMessage, "");
+  $("resultPanel").hidden = true;
+  showMessage($("answerMessage"), "");
 
-  resultPanel.hidden = true;
-
-  previousQuestion.disabled =
+  $("previousQuestion").disabled =
     index === 0;
 
-  nextQuestion.disabled =
+  $("nextQuestion").disabled =
     index === questions.length - 1;
 
   const existing =
@@ -316,16 +249,13 @@ async function loadQuestion(index) {
 
   if (existing) {
     await showExistingResult(question.id);
-  } else {
-    setTimeout(() => answerInput.focus(), 100);
   }
 }
 
-
 async function showExistingResult(questionId) {
-  answerInput.disabled = true;
-  submitAnswer.disabled = true;
-  submitAnswer.textContent = "已提交";
+  $("answerInput").disabled = true;
+  $("submitAnswer").disabled = true;
+  $("submitAnswer").textContent = "已提交";
 
   const { data, error } =
     await window.db.rpc(
@@ -337,104 +267,85 @@ async function showExistingResult(questionId) {
 
   if (error) {
     showMessage(
-      answerMessage,
+      $("answerMessage"),
       error.message,
       "error"
     );
     return;
   }
 
-  if (data) {
-    displayResult(data);
-  }
+  if (data) displayResult(data);
 }
-
 
 function displayResult(result) {
-  resultPanel.hidden = false;
+  $("resultPanel").hidden = false;
 
-  resultPanel.classList.toggle(
-    "correct",
+  $("resultPanel").className =
+    `result-panel ${
+      result.is_correct ? "correct" : "wrong"
+    }`;
+
+  $("resultTitle").textContent =
     result.is_correct
-  );
+      ? "答案驗證成功・能量增加"
+      : "答案已記錄・查看分析";
 
-  resultPanel.classList.toggle(
-    "wrong",
-    !result.is_correct
-  );
-
-  resultTitle.textContent =
-    result.is_correct
-      ? "回答正確・能量增加"
-      : "回答已記錄・請查看分析";
-
-  submittedAnswer.textContent =
+  $("submittedAnswer").textContent =
     result.submitted_answer;
 
-  correctAnswer.textContent =
+  $("correctAnswer").textContent =
     result.correct_answer;
 
-  awardedPoints.textContent =
+  $("awardedPoints").textContent =
     `${result.points_awarded} / 5`;
 
-  /*
-    solution 由我們自己的資料庫管理，
-    所以在這裡使用 innerHTML 顯示換行及粗體。
-  */
-  solutionText.innerHTML =
+  $("solutionText").innerHTML =
     result.solution;
 
-  answerInput.value =
+  $("answerInput").value =
     result.submitted_answer;
 
-  answerInput.disabled = true;
-
-  submitAnswer.disabled = true;
-  submitAnswer.textContent = "已提交";
+  $("answerInput").disabled = true;
+  $("submitAnswer").disabled = true;
+  $("submitAnswer").textContent = "已提交";
 }
 
-
-submitAnswer.addEventListener("click", () => {
-  const value = answerInput.value.trim();
-
-  if (!value) {
-    showMessage(
-      answerMessage,
-      "請先輸入答案。",
-      "error"
-    );
-
-    answerInput.focus();
-    return;
-  }
-
-  pendingAnswer = value;
-  confirmDialog.hidden = false;
-});
-
-
-cancelSubmit.addEventListener("click", () => {
-  confirmDialog.hidden = true;
-  pendingAnswer = "";
-  answerInput.focus();
-});
-
-
-confirmSubmit.addEventListener(
+$("submitAnswer").addEventListener(
   "click",
-  async () => {
-    const question =
-      questions[activeIndex];
+  () => {
+    const answer =
+      $("answerInput").value.trim();
 
-    if (!question || !pendingAnswer) {
-      confirmDialog.hidden = true;
+    if (!answer) {
+      showMessage(
+        $("answerMessage"),
+        "請先輸入答案。",
+        "error"
+      );
       return;
     }
 
-    confirmSubmit.disabled = true;
-    confirmSubmit.textContent = "提交中...";
+    pendingAnswer = answer;
+    $("confirmDialog").hidden = false;
+  }
+);
 
-    submitAnswer.disabled = true;
+$("cancelSubmit").addEventListener(
+  "click",
+  () => {
+    $("confirmDialog").hidden = true;
+    pendingAnswer = "";
+  }
+);
+
+$("confirmSubmit").addEventListener(
+  "click",
+  async () => {
+    const question = questions[activeIndex];
+
+    $("confirmSubmit").disabled = true;
+    $("confirmSubmit").textContent =
+      "傳送中...";
 
     const { data, error } =
       await window.db.rpc(
@@ -445,143 +356,149 @@ confirmSubmit.addEventListener(
         }
       );
 
-    confirmSubmit.disabled = false;
-    confirmSubmit.textContent = "確定提交";
+    $("confirmSubmit").disabled = false;
+    $("confirmSubmit").textContent =
+      "確定提交";
 
-    confirmDialog.hidden = true;
+    $("confirmDialog").hidden = true;
     pendingAnswer = "";
 
     if (error) {
-      submitAnswer.disabled = false;
-
       showMessage(
-        answerMessage,
+        $("answerMessage"),
         error.message,
         "error"
       );
-
       return;
     }
 
-    answerMap.set(
-      question.id,
-      {
-        question_id: question.id,
-        is_correct: data.is_correct,
-        points_awarded:
-          data.points_awarded
-      }
-    );
+    answerMap.set(question.id, {
+      question_id: question.id,
+      is_correct: data.is_correct,
+      points_awarded: data.points_awarded
+    });
 
-    playerScore.textContent =
+    $("playerScore").textContent =
       data.total_score;
+
+    $("shipLevel").textContent =
+      `LV.${data.ship_level}`;
 
     displayResult(data);
     renderNavigation();
 
     showMessage(
-      answerMessage,
+      $("answerMessage"),
       data.is_correct
-        ? `回答正確！獲得 ${data.points_awarded} 分。`
-        : "答案不正確，本題獲得 0 分。請查看解題步驟。",
-      data.is_correct
-        ? "success"
-        : "error"
+        ? `驗證成功！+${data.points_awarded} 分，飛船 +${data.xp_awarded} XP。`
+        : `答案不正確，飛船仍獲得 ${data.xp_awarded} XP。`,
+      data.is_correct ? "success" : "error"
     );
 
-    const completedLevel =
-      questions.every(
-        (item) =>
-          answerMap.has(item.id)
-      );
+    playTone(
+      data.is_correct ? 780 : 220,
+      0.16,
+      data.is_correct ? "square" : "sawtooth"
+    );
 
-    if (completedLevel) {
-      const nextLevel =
-        currentLevel.id + 1;
-
-      if (nextLevel <= 4) {
-        nextQuestion.disabled = false;
-        nextQuestion.textContent =
-          "前往下一關 →";
-
-        nextQuestion.onclick = () => {
-          location.href =
-            `practice.html?level=${nextLevel}`;
-        };
-      } else {
-        nextQuestion.disabled = false;
-        nextQuestion.textContent =
-          "查看最終排名 →";
-
-        nextQuestion.onclick = () => {
-          location.href =
-            "leaderboard.html";
-        };
-      }
+    if (data.planet_completed) {
+      showPlanetClear(data);
     }
   }
 );
 
+function showPlanetClear(data) {
+  $("clearPlanetName").textContent =
+    `${data.planet_name}探索完成！`;
 
-showHint.addEventListener("click", () => {
-  hintText.hidden = !hintText.hidden;
+  $("clearScore").textContent =
+    `${data.planet_score} / ${
+      questions.reduce(
+        (sum, question) =>
+          sum + Number(question.points),
+        0
+      )
+    }`;
 
-  showHint.textContent =
-    hintText.hidden
-      ? "顯示任務提示"
-      : "收起任務提示";
-});
+  $("clearLevel").textContent =
+    `LV.${data.ship_level}`;
 
+  const currentIndex =
+    allPlanets.findIndex(
+      (item) => item.id === planet.id
+    );
 
-previousQuestion.addEventListener(
+  const nextPlanet =
+    allPlanets[currentIndex + 1];
+
+  const nextButton =
+    $("goNextPlanet");
+
+  if (nextPlanet) {
+    nextButton.textContent =
+      `前往 ${nextPlanet.name}`;
+
+    nextButton.onclick = () => {
+      location.href =
+        `practice.html?level=${nextPlanet.id}`;
+    };
+  } else {
+    nextButton.textContent =
+      "查看探索者排行榜";
+
+    nextButton.onclick = () => {
+      location.href = "leaderboard.html";
+    };
+  }
+
+  setTimeout(() => {
+    $("planetClearModal").hidden = false;
+    playTone(880, 0.3, "square");
+  }, 500);
+}
+
+$("showHint").addEventListener(
   "click",
-  async () => {
-    if (activeIndex <= 0) return;
+  () => {
+    $("hintText").hidden =
+      !$("hintText").hidden;
 
-    activeIndex -= 1;
-    await loadQuestion(activeIndex);
+    $("showHint").textContent =
+      $("hintText").hidden
+        ? "啟動掃描提示"
+        : "關閉掃描提示";
   }
 );
 
+$("previousQuestion").addEventListener(
+  "click",
+  async () => {
+    if (activeIndex <= 0) return;
+    await loadQuestion(--activeIndex);
+  }
+);
 
-nextQuestion.addEventListener(
+$("nextQuestion").addEventListener(
   "click",
   async () => {
     if (
       activeIndex >= questions.length - 1
-    ) {
-      return;
-    }
+    ) return;
 
-    activeIndex += 1;
-    await loadQuestion(activeIndex);
+    await loadQuestion(++activeIndex);
   }
 );
 
-
-answerInput.addEventListener(
+$("answerInput").addEventListener(
   "keydown",
   (event) => {
     if (
       event.key === "Enter" &&
-      !submitAnswer.disabled
+      !$("submitAnswer").disabled
     ) {
-      submitAnswer.click();
+      $("submitAnswer").click();
     }
   }
 );
-
-
-confirmDialog.addEventListener(
-  "click",
-  (event) => {
-    if (event.target === confirmDialog) {
-      confirmDialog.hidden = true;
-      pendingAnswer = "";
-    }
-  }
-);
-
 
 initialisePractice();
-
