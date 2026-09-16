@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://jackyleung0411.github.io/maths-in-your-mind/
