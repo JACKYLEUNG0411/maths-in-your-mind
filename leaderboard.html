@@ -1,1 +1,124 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+
+    <title>探索者排行榜｜心中有數</title>
+
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="space-background" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="logo" href="index.html">
+        <span class="logo-core">數</span>
+        <span>
+          心中有數
+          <small>DSE MATH MISSION</small>
+        </span>
+      </a>
+
+      <nav>
+        <a href="levels.html">任務地圖</a>
+        <a
+          href="leaderboard.html"
+          class="active"
+        >
+          排行榜
+        </a>
+        <button data-logout type="button">
+          登出
+        </button>
+      </nav>
+    </header>
+
+    <main class="page-container">
+      <section class="leaderboard-heading">
+        <p class="system-label">
+          GALACTIC RANKING SYSTEM
+        </p>
+
+        <h1>探索者排行榜</h1>
+
+        <p>
+          排名由資料庫按照累計分數自動計算，
+          玩家不能手動修改分數。
+        </p>
+      </section>
+
+      <section
+        id="myRankCard"
+        class="my-rank-card"
+      >
+        <div>
+          <span>你的探索者名稱</span>
+          <strong id="myName">---</strong>
+        </div>
+
+        <div>
+          <span>累計分數</span>
+          <strong id="myScore">0</strong>
+        </div>
+
+        <div>
+          <span>已回答</span>
+          <strong id="myAnswered">0</strong>
+        </div>
+
+        <div>
+          <span>答對題目</span>
+          <strong id="myCorrect">0</strong>
+        </div>
+      </section>
+
+      <section class="ranking-panel">
+        <div class="ranking-header">
+          <h2>TOP EXPLORERS</h2>
+
+          <button
+            id="refreshRanking"
+            class="button secondary"
+            type="button"
+          >
+            更新排名
+          </button>
+        </div>
+
+        <div class="table-scroll">
+          <table class="ranking-table">
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th>探索者</th>
+                <th>累計分數</th>
+                <th>已回答</th>
+                <th>答對</th>
+              </tr>
+            </thead>
+
+            <tbody id="rankingBody">
+              <tr>
+                <td colspan="5">
+                  正在載入星際排名...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="common.js"></script>
+    <script src="leaderboard.js"></script>
+  </body>
+</html>
 
