@@ -8,15 +8,6 @@
     "sb_publishable_msVVLrRWTYHKAnia15J-Pw_nDdcK3Mb";
 
   if (
-    !SUPABASE_URL ||
-    !SUPABASE_KEY
-  ) {
-    throw new Error(
-      "Supabase 設定不完整。"
-    );
-  }
-
-  if (
     !window.supabase ||
     typeof window.supabase.createClient !==
       "function"
