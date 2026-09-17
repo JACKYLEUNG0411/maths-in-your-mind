@@ -16,6 +16,11 @@
   <title>星球練習｜Maths in Your Mind</title>
 
   <link rel="stylesheet" href="styles.css">
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css"
+  >
 </head>
 
 <body class="practice-universe-body">
@@ -172,7 +177,10 @@
           aria-expanded="false"
           aria-controls="hintContent"
         >
-          <span class="hint-toggle-icon" aria-hidden="true">
+          <span
+            class="hint-toggle-icon"
+            aria-hidden="true"
+          >
             💡
           </span>
 
@@ -227,16 +235,15 @@
 
       <div class="answer-input-row">
         <input
-  id="answerInput"
-  type="text"
-  inputmode="text"
-  autocomplete="off"
-  autocapitalize="off"
-  autocorrect="off"
-  spellcheck="false"
-  placeholder="例如：x^2、a+b、3:4、1.6 km"
->
-
+          id="answerInput"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          placeholder="例如：x^2、a+b、3:4、1.6 km"
+        >
 
         <button
           id="submitAnswer"
@@ -273,7 +280,10 @@
 
         <div class="verified-answer-section">
           <div class="verified-answer-heading">
-            <span class="verified-icon" aria-hidden="true">
+            <span
+              class="verified-icon"
+              aria-hidden="true"
+            >
               ✦
             </span>
 
@@ -356,9 +366,19 @@
 
   </main>
 
+  <!-- 外部 JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"
+  ></script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"
+  ></script>
+
   <script src="config.js"></script>
-  <script src="practice.js?v=7"></script>
+  <script src="practice.js?v=8"></script>
 
 </body>
 </html>
