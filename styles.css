@@ -1,82 +1,696 @@
-/* =========================================================
-   Practice page：KaTeX 題目分數顯示
-   必須放在 styles.css 最底部
-   ========================================================= */
-
-.practice-universe-body #questionText {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: normal;
+:root {
+  --bg: #080d2c;
+  --bg-light: #111a42;
+  --card: rgba(21, 32, 78, 0.88);
+  --card-light: rgba(30, 45, 98, 0.82);
+  --line: rgba(126, 157, 235, 0.28);
+  --text: #f2f5ff;
+  --muted: #aeb9df;
+  --blue: #2868ed;
+  --blue-light: #5d93ff;
+  --cyan: #61ead6;
+  --green: #20d2a2;
+  --gold: #ffd365;
+  --danger: #ff899e;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
 }
 
-.practice-universe-body #questionText .katex {
-  color: #f1f5ff !important;
-  font-size: 1.08em;
-  line-height: 1.35;
+* {
+  box-sizing: border-box;
 }
 
-.practice-universe-body #questionText .katex-display {
+html {
+  min-width: 320px;
+  background: var(--bg);
+}
+
+body.practice-universe-body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background:
+    radial-gradient(
+      circle at 12% 8%,
+      rgba(72, 119, 235, 0.24),
+      transparent 26rem
+    ),
+    radial-gradient(
+      circle at 88% 30%,
+      rgba(72, 224, 205, 0.12),
+      transparent 25rem
+    ),
+    linear-gradient(135deg, #090d2c, #10183c 48%, #071b36);
+  font-family:
+    "Noto Sans TC",
+    "Microsoft JhengHei",
+    system-ui,
+    sans-serif;
+}
+
+body.practice-universe-body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  opacity: 0.42;
+  pointer-events: none;
+  background-image:
+    radial-gradient(#fff 1px, transparent 1px),
+    radial-gradient(#81a7ff 1px, transparent 1px);
+  background-position: 0 0, 70px 100px;
+  background-size: 170px 170px, 230px 230px;
+}
+
+.practice-page {
+  width: min(100% - 32px, 1470px);
+  margin: 0 auto;
+  padding: 28px 0 70px;
+}
+
+.practice-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.back-to-map {
+  color: var(--muted);
+  font-size: 15px;
+  text-decoration: none;
+}
+
+.back-to-map:hover {
+  color: var(--cyan);
+}
+
+.mission-label,
+.eyebrow,
+.question-label,
+.zone-label,
+.verified-answer-heading p,
+.completed-message p {
+  color: #aebbe7;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.mission-label {
+  color: var(--cyan);
+}
+
+.mission-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 16px var(--cyan);
+}
+
+.planet-hero,
+.mission-progress-card,
+.mission-card {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: linear-gradient(
+    145deg,
+    rgba(29, 43, 96, 0.95),
+    rgba(13, 22, 60, 0.9)
+  );
+  box-shadow: var(--shadow);
+}
+
+.planet-hero {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  padding: 38px 48px;
+}
+
+.planet-hero-icon {
+  display: grid;
+  flex: 0 0 76px;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 1px solid #4eddd7;
+  border-radius: 22px;
+  color: var(--cyan);
+  font-size: 36px;
+  background: rgba(34, 210, 194, 0.12);
+  box-shadow: 0 0 28px rgba(66, 224, 211, 0.2);
+}
+
+.planet-hero h1 {
+  margin: 9px 0;
+  color: var(--text);
+  font-size: clamp(30px, 4vw, 56px);
+  line-height: 1.15;
+}
+
+.planet-hero p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.mission-progress-card {
+  margin-top: 18px;
+  padding: 24px 30px;
+}
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.progress-title,
+.progress-subtitle {
+  margin: 0;
+}
+
+.progress-title {
+  font-weight: 800;
+}
+
+.progress-subtitle {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.question-counter {
+  color: var(--cyan);
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.progress-track {
+  height: 9px;
+  margin-top: 20px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.11);
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  box-shadow: 0 0 16px rgba(97, 234, 214, 0.6);
+  transition: width 0.35s ease;
+}
+
+.mission-card {
+  margin-top: 28px;
+  padding: 35px 48px;
+}
+
+.mission-card-topline,
+.answer-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.zone-identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.zone-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--cyan);
+  border-radius: 14px;
+  color: var(--cyan);
+  background: rgba(97, 234, 214, 0.1);
+  font-size: 22px;
+}
+
+.zone-label,
+.zone-name,
+.zone-description {
+  margin: 0;
+}
+
+.zone-label {
+  margin-bottom: 6px;
+}
+
+.zone-name {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.zone-description,
+.question-text,
+.answer-format-note {
+  color: var(--muted);
+}
+
+.zone-description {
+  margin: 22px 0 0;
+}
+
+.mission-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.mission-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 13px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.points-tag {
+  color: var(--gold);
+  border-color: rgba(255, 211, 101, 0.45);
+}
+
+.question-divider {
+  height: 1px;
+  margin: 30px 0;
+  background: var(--line);
+}
+
+.question-label {
+  margin: 0 0 12px;
+}
+
+.question-card h2,
+.answer-card h2 {
+  margin: 0;
+  font-size: clamp(25px, 3vw, 40px);
+}
+
+.question-text {
   max-width: 100%;
-  margin: 1rem 0;
+  margin-top: 25px;
+  color: var(--text);
+  font-size: 21px;
+  line-height: 2;
+  overflow-wrap: anywhere;
+}
+
+.question-text .katex,
+.solution-section .katex {
+  color: var(--text);
+}
+
+.katex-display {
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  text-align: center;
+  padding: 8px 0;
   -webkit-overflow-scrolling: touch;
 }
 
-/* 解題步驟 */
-.practice-universe-body #solutionText {
+.hint-panel {
+  margin-top: 30px;
+}
+
+.hint-toggle,
+.submit-answer-button,
+.navigation-button {
+  border: 0;
+  border-radius: 14px;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.hint-toggle:hover,
+.submit-answer-button:hover,
+.navigation-button:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+
+.hint-toggle {
+  padding: 15px 22px;
+  color: #fff1b1;
+  background: var(--blue);
+}
+
+.hint-toggle-arrow {
+  display: inline-block;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.hint-toggle.is-open .hint-toggle-arrow {
+  transform: rotate(180deg);
+}
+
+.hint-content {
+  margin-top: 12px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: rgba(4, 10, 38, 0.42);
+}
+
+.hint-content-label {
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.hint-content p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.answer-card-heading {
+  align-items: center;
+}
+
+.answer-lock-note {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.answer-input-label {
+  display: block;
+  margin-top: 28px;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.answer-input-row {
+  display: flex;
+  gap: 12px;
+}
+
+#answerInput {
   min-width: 0;
-  overflow-wrap: anywhere;
+  flex: 1;
+  height: 58px;
+  padding: 0 20px;
+  border: 1px solid #50639e;
+  border-radius: 15px;
+  outline: none;
+  color: var(--text);
+  background: rgba(4, 9, 34, 0.7);
+  font: inherit;
+  font-size: 18px;
 }
 
-.practice-universe-body #solutionText p {
-  margin: 0 0 12px !important;
+#answerInput:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(97, 234, 214, 0.15);
 }
 
-.practice-universe-body #solutionText p:last-child {
-  margin-bottom: 0 !important;
+.submit-answer-button {
+  min-width: 175px;
+  background: var(--blue);
 }
 
-.practice-universe-body #solutionText .katex {
-  color: #f1f5ff !important;
-  font-size: 1.08em !important;
+.submit-answer-button:disabled,
+.navigation-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
 }
 
-.practice-universe-body #solutionText .katex span {
-  color: inherit !important;
-  background: transparent !important;
-  font-size: inherit !important;
-  line-height: inherit !important;
+.answer-format-note {
+  margin: 10px 0 0;
+  font-size: 13px;
 }
 
-.practice-universe-body #solutionText .katex-display {
-  max-width: 100%;
-  margin: 0.9rem 0 !important;
-  padding: 0.35rem 0;
-  overflow-x: auto;
-  overflow-y: hidden;
+.answer-message {
+  margin-top: 22px;
+  padding: 18px 22px;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.message-success {
+  color: #c5ffec;
+  border: 1px solid #20d2a2;
+  background: rgba(20, 148, 122, 0.5);
+}
+
+.message-error {
+  color: #ffd6df;
+  border: 1px solid var(--danger);
+  background: rgba(161, 47, 76, 0.4);
+}
+
+.result-panel {
+  margin-top: 24px;
+  padding: 25px;
+  border: 1px solid rgba(32, 210, 162, 0.5);
+  border-radius: 20px;
+  background: rgba(10, 52, 71, 0.62);
+}
+
+.result-status {
+  margin-bottom: 22px;
+  color: var(--cyan);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.result-incorrect {
+  color: #ffb1bf;
+}
+
+.verified-answer-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.verified-answer-heading p,
+.verified-answer-heading h3 {
+  margin: 0;
+}
+
+.verified-answer-heading h3 {
+  margin-top: 4px;
+  font-size: 22px;
+}
+
+.verified-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--cyan);
+  border-radius: 13px;
+  color: var(--cyan);
+}
+
+.correct-answer-box {
+  margin-top: 20px;
+  padding: 22px;
+  border: 2px solid var(--cyan);
+  border-radius: 15px;
+  color: var(--text);
+  background: rgba(22, 119, 105, 0.55);
+  font-size: 26px;
   text-align: center;
-  -webkit-overflow-scrolling: touch;
 }
 
-/* 公式錯誤時仍然保持可讀 */
-.practice-universe-body .katex-error {
-  color: #ffd28a !important;
-  font-family: inherit;
+.reward-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 18px;
 }
 
-/* 手機版 */
-@media (max-width: 700px) {
-  .practice-universe-body #questionText .katex,
-  .practice-universe-body #solutionText .katex {
-    font-size: 1em !important;
+.reward-item {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: rgba(5, 12, 42, 0.35);
+}
+
+.reward-item span,
+.reward-item strong {
+  display: block;
+}
+
+.reward-item span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.reward-item strong {
+  margin-top: 5px;
+  color: var(--gold);
+  font-size: 20px;
+}
+
+.solution-section {
+  margin-top: 24px;
+  color: var(--text);
+  line-height: 1.9;
+}
+
+.solution-heading {
+  margin-bottom: 12px;
+  color: var(--cyan);
+  font-weight: 800;
+}
+
+.solution-section p {
+  margin: 8px 0;
+}
+
+.question-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 24px;
+}
+
+.navigation-button {
+  padding: 14px 22px;
+  background: rgba(42, 65, 133, 0.9);
+}
+
+.next-button {
+  margin-left: auto;
+  background: var(--blue);
+}
+
+.loading-overlay {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  color: var(--text);
+  background: rgba(5, 9, 32, 0.92);
+}
+
+.loading-overlay[hidden],
+.result-panel[hidden],
+.answer-message[hidden],
+.completed-message[hidden] {
+  display: none;
+}
+
+.loading-orbit {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(97, 234, 214, 0.2);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.completed-message {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 28px;
+  padding: 28px;
+  border: 1px solid var(--cyan);
+  border-radius: 20px;
+  background: var(--card);
+}
+
+.completed-icon {
+  color: var(--cyan);
+  font-size: 36px;
+}
+
+.completed-message h2 {
+  margin: 7px 0 15px;
+}
+
+.completed-message a {
+  color: var(--cyan);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .practice-page {
+    width: min(100% - 20px, 680px);
+    padding-top: 16px;
   }
 
-  .practice-universe-body #questionText .katex-display,
-  .practice-universe-body #solutionText .katex-display {
-    margin: 0.75rem 0 !important;
-    padding: 0.35rem 4px;
-    text-align: left;
+  .practice-header-top,
+  .mission-card-topline,
+  .answer-card-heading,
+  .progress-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .planet-hero,
+  .mission-card {
+    padding: 25px 20px;
+    border-radius: 20px;
+  }
+
+  .mission-progress-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .mission-tags {
+    justify-content: flex-start;
+  }
+
+  .question-text {
+    font-size: 18px;
+  }
+
+  .answer-input-row {
+    flex-direction: column;
+  }
+
+  .submit-answer-button {
+    width: 100%;
+    min-height: 54px;
+  }
+
+  .answer-lock-note {
+    align-self: stretch;
+    text-align: center;
+  }
+
+  .reward-grid {
+    grid-template-columns: 1fr;
   }
 }
