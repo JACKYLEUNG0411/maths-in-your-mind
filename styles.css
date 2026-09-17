@@ -3540,3 +3540,6 @@ footer {
     font-size: 18px;
   }
 }
+.question-text {
+  white-space: pre-line;
+}
