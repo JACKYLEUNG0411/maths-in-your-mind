@@ -3821,3 +3821,63 @@ footer p {
     line-height: 1.8 !important;
   }
 }
+/* =========================================================
+   題目中文字、數字及行內公式排版
+   ========================================================= */
+
+.practice-universe-body .question-text {
+  display: block !important;
+  color: #eef3ff !important;
+  font-size: clamp(18px, 2.2vw, 21px) !important;
+  line-height: 1.9 !important;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* 行內公式要和中文字連在一起 */
+.practice-universe-body .question-text .katex {
+  display: inline !important;
+  margin: 0 0.12em !important;
+  color: #ffffff !important;
+  white-space: nowrap !important;
+}
+
+/* KaTeX 內部元素 */
+.practice-universe-body .question-text .katex *,
+.practice-universe-body .question-text .mord,
+.practice-universe-body .question-text .mathnormal {
+  color: #ffffff !important;
+}
+
+/* 只有 display math 才獨立置中 */
+.practice-universe-body .question-text .katex-display {
+  display: block !important;
+  width: 100% !important;
+  margin: 18px 0 !important;
+  overflow-x: auto !important;
+  text-align: center !important;
+}
+
+/* 題目中的段落不要產生過大的空隙 */
+.practice-universe-body .question-text p {
+  display: block !important;
+  margin: 0 0 12px !important;
+  color: #eef3ff !important;
+  line-height: 1.9 !important;
+}
+
+.practice-universe-body .question-text p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* 題目中的 div 不要把每個字拆成大區塊 */
+.practice-universe-body .question-text > div:not(.katex-display) {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+/* 題目文字內的換行只保留正常換行 */
+.practice-universe-body .question-text br {
+  line-height: 1.9 !important;
+}
