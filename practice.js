@@ -1,30 +1,9 @@
 (() => {
   "use strict";
 
-  const $ = (id) => document.getElementById(id);
-
-  let db = null;
-  let currentUser = null;
-  let currentLevel = null;
-  let questions = [];
-  let currentIndex = 0;
-
-  /*
-    已作答的題目會記錄於這裡。
-    每題在介面上只可提交一次。
-  */
-  const submittedResults = new Map();
-
-  const params = new URLSearchParams(
-    window.location.search
-  );
-
-  const levelId = Number(
-    params.get("level_id") ||
-    params.get("level") ||
-    params.get("id") ||
-    1
-  );
+  const $ = (id) => {
+    return document.getElementById(id);
+  };
 
   const elements = {
     levelName: $("levelName"),
@@ -67,6 +46,24 @@
     completedMessage: $("completedMessage")
   };
 
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
+  const levelId = Number(
+    params.get("level_id") ||
+    params.get("level") ||
+    params.get("id") ||
+    1
+  );
+
+  let db = null;
+  let currentUser = null;
+  let questions = [];
+  let currentIndex = 0;
+
+  const submittedResults = new Map();
+
   document.addEventListener(
     "DOMContentLoaded",
     init
@@ -91,8 +88,8 @@
         );
       }
 
-      showLoading(true);
       bindEvents();
+      showLoading(true);
 
       await checkLogin();
       await loadLevel();
@@ -110,8 +107,7 @@
       console.error(error);
 
       showMessage(
-        error?.message ||
-        "載入練習頁面時發生錯誤。",
+        "系統暫時無法載入資料，請稍後再試。",
         "error"
       );
     } finally {
@@ -162,11 +158,9 @@
 
     if (!data) {
       throw new Error(
-        `找不到 level_id = ${levelId} 的星球。`
+        "找不到指定的星球。"
       );
     }
-
-    currentLevel = data;
 
     setText(
       elements.levelName,
@@ -216,11 +210,6 @@
       : [];
   }
 
-  /*
-    載入學生過往已提交的答案。
-    若資料庫函式對尚未作答題目回傳空值，
-    會直接略過，不影響整個頁面。
-  */
   async function loadSubmittedAnswers() {
     submittedResults.clear();
 
@@ -238,13 +227,14 @@
 
         if (error) {
           console.warn(
-            `讀取題目 ${question.id} 作答紀錄失敗：`,
+            `讀取題目 ${question.id} 紀錄失敗`,
             error.message
           );
           continue;
         }
 
-        const result = unwrapRpcResult(data);
+        const result =
+          unwrapRpcResult(data);
 
         if (result) {
           submittedResults.set(
@@ -259,29 +249,6 @@
   }
 
   function bindEvents() {
-    if (elements.answerInput) {
-      elements.answerInput.type = "text";
-      elements.answerInput.inputMode = "text";
-      elements.answerInput.removeAttribute("pattern");
-
-      elements.answerInput.setAttribute(
-        "autocapitalize",
-        "off"
-      );
-
-      elements.answerInput.setAttribute(
-        "autocomplete",
-        "off"
-      );
-
-      elements.answerInput.setAttribute(
-        "autocorrect",
-        "off"
-      );
-
-      elements.answerInput.spellcheck = false;
-    }
-
     elements.submitAnswer?.addEventListener(
       "click",
       submitCurrentAnswer
@@ -328,16 +295,9 @@
     clearResult();
     closeHint();
 
-    function formatQuestionText(value) {
-      return String(value ?? "")
-        .replace(/\\r\\n/g, "\n")
-        .replace(/\\n/g, "\n")
-        .replace(/\\t/g, "\t");
-    }
-
     setText(
       elements.questionNumber,
-      `任務 ${currentIndex + 1} / ${questions.length}`
+      `${currentIndex + 1} / ${questions.length}`
     );
 
     setText(
@@ -369,7 +329,9 @@
 
     setText(
       elements.difficulty,
-      getDifficultyText(question.difficulty)
+      getDifficultyText(
+        question.difficulty
+      )
     );
 
     setText(
@@ -385,12 +347,13 @@
 
     setText(
       elements.questionText,
-      formatQuestionText(question.question_text)
+      formatText(question.question_text)
     );
 
     setText(
       elements.hintText,
-      question.hint || "這道題暫時沒有額外提示。"
+      question.hint ||
+      "這道題暫時沒有額外提示。"
     );
 
     if (elements.answerInput) {
@@ -415,21 +378,20 @@
     }
   }
 
-  function getDifficultyText(difficulty) {
-    const level = Number(difficulty) || 1;
+  function formatText(value) {
+    return String(value ?? "")
+      .replace(/\\r\\n/g, "\n")
+      .replace(/\\n/g, "\n")
+      .replace(/\\t/g, "\t");
+  }
 
-    const filled = "●".repeat(
-      Math.min(Math.max(level, 1), 3)
+  function getDifficultyText(value) {
+    const level = Math.min(
+      Math.max(Number(value) || 1, 1),
+      3
     );
 
-    const empty = "○".repeat(
-      Math.max(
-        3 - Math.min(Math.max(level, 1), 3),
-        0
-      )
-    );
-
-    return `難度 ${filled}${empty}`;
+    return `難度 ${"●".repeat(level)}${"○".repeat(3 - level)}`;
   }
 
   function updateProgress() {
@@ -467,25 +429,24 @@
       return;
     }
 
-    const isOpen =
-      !elements.hintContent.hidden;
+    const opening =
+      elements.hintContent.hidden;
 
-    elements.hintContent.hidden = isOpen;
+    elements.hintContent.hidden = !opening;
 
     elements.toggleHint.setAttribute(
       "aria-expanded",
-      String(!isOpen)
+      String(opening)
     );
-
-    if (elements.hintButtonText) {
-      elements.hintButtonText.textContent = isOpen
-        ? "使用提示"
-        : "收起提示";
-    }
 
     elements.toggleHint.classList.toggle(
       "is-open",
-      !isOpen
+      opening
+    );
+
+    setText(
+      elements.hintButtonText,
+      opening ? "收起提示" : "使用提示"
     );
   }
 
@@ -505,10 +466,10 @@
       );
     }
 
-    if (elements.hintButtonText) {
-      elements.hintButtonText.textContent =
-        "使用提示";
-    }
+    setText(
+      elements.hintButtonText,
+      "使用提示"
+    );
   }
 
   async function submitCurrentAnswer() {
@@ -518,10 +479,6 @@
       return;
     }
 
-    /*
-      前端禁止再次提交；
-      資料庫函式 submit_answer 亦應保留防重複提交邏輯。
-    */
     if (submittedResults.has(question.id)) {
       showExistingResult(
         submittedResults.get(question.id)
@@ -581,27 +538,23 @@
       setSubmitting(false);
 
       showMessage(
-        error?.message ||
         "提交答案時發生錯誤，請稍後再試。",
         "error"
       );
     }
   }
 
-  function setSubmitting(isSubmitting) {
+  function setSubmitting(value) {
     if (elements.answerInput) {
-      elements.answerInput.disabled =
-        isSubmitting;
+      elements.answerInput.disabled = value;
     }
 
     if (elements.submitAnswer) {
-      elements.submitAnswer.disabled =
-        isSubmitting;
+      elements.submitAnswer.disabled = value;
 
-      elements.submitAnswer.innerHTML =
-        isSubmitting
-          ? '<span aria-hidden="true">◌</span> 正在驗證答案…'
-          : '<span aria-hidden="true">✦</span> 提交答案';
+      elements.submitAnswer.innerHTML = value
+        ? '<span aria-hidden="true">◌</span> 正在驗證答案…'
+        : '<span aria-hidden="true">✦</span> 提交答案';
     }
   }
 
@@ -611,13 +564,6 @@
         result.submitted_answer || "";
 
       elements.answerInput.disabled = true;
-    }
-
-    if (elements.submitAnswer) {
-      elements.submitAnswer.disabled = true;
-
-      elements.submitAnswer.innerHTML =
-        '<span aria-hidden="true">✓</span> 已提交答案';
     }
 
     showResult(result);
@@ -649,12 +595,12 @@
         "✓ 回答正確 · 任務訊號已確認"
       );
 
-      elements.resultStatus?.classList.remove(
-        "result-incorrect"
-      );
-
       elements.resultStatus?.classList.add(
         "result-correct"
+      );
+
+      elements.resultStatus?.classList.remove(
+        "result-incorrect"
       );
     } else {
       showMessage(
@@ -667,19 +613,15 @@
         "⌁ 任務分析完成 · 參考以下正確答案"
       );
 
-      elements.resultStatus?.classList.remove(
-        "result-correct"
-      );
-
       elements.resultStatus?.classList.add(
         "result-incorrect"
       );
+
+      elements.resultStatus?.classList.remove(
+        "result-correct"
+      );
     }
 
-    /*
-      正確答案使用 textContent 輸出，
-      不解析答案中的 HTML。
-    */
     setText(
       elements.correctAnswer,
       result.correct_answer ||
@@ -697,23 +639,15 @@
       xp ? `+${xp} XP` : "0 XP"
     );
 
-    /*
-      solution 是教師／管理員預先寫入的解題內容。
-      使用 innerHTML 讓 HTML 標籤正常顯示。
-    */
-    if (elements.solutionText) {
-      const solution =
-        result.solution ||
-        result.explanation ||
-        "暫無解題步驟。";
+    const solution =
+      result.solution ||
+      result.explanation ||
+      "暫無解題步驟。";
 
-      elements.solutionText.innerHTML =
-        solution;
-
-      renderSolutionMath(
-        elements.solutionText
-      );
-    }
+    renderSafeSolution(
+      elements.solutionText,
+      solution
+    );
 
     if (elements.resultPanel) {
       elements.resultPanel.hidden = false;
@@ -725,25 +659,59 @@
 
     if (elements.submitAnswer) {
       elements.submitAnswer.disabled = true;
-
       elements.submitAnswer.innerHTML =
         '<span aria-hidden="true">✓</span> 已提交答案';
     }
   }
 
-  /*
-    將解題步驟中的 KaTeX 標記轉成數學公式。
+  function renderSafeSolution(
+    element,
+    solution
+  ) {
+    if (!element) {
+      return;
+    }
 
-    行內公式：
-    $$3x+5=20$$
+    const rawSolution = String(
+      solution ?? ""
+    );
 
-    獨立公式：
-    $$3x+5=20$$
+    if (
+      window.DOMPurify &&
+      typeof window.DOMPurify.sanitize ===
+        "function"
+    ) {
+      element.innerHTML =
+        window.DOMPurify.sanitize(
+          rawSolution,
+          {
+            ALLOWED_TAGS: [
+              "p",
+              "br",
+              "strong",
+              "b",
+              "em",
+              "i",
+              "u",
+              "sub",
+              "sup",
+              "ul",
+              "ol",
+              "li",
+              "span"
+            ],
+            ALLOWED_ATTR: [
+              "class"
+            ]
+          }
+        );
+    } else {
+      element.textContent = rawSolution;
+    }
 
-    或：
+    renderSolutionMath(element);
+  }
 
-    $$3x+5=20$$
-  */
   function renderSolutionMath(element) {
     if (!element) {
       return;
@@ -774,7 +742,8 @@
           display: false
         }
       ],
-      throwOnError: false
+      throwOnError: false,
+      strict: "ignore"
     });
   }
 
@@ -813,7 +782,11 @@
       elements.completedMessage.hidden = false;
 
       elements.completedMessage.innerHTML = `
-        <span class="completed-icon">✦</span>
+        <span
+          class="completed-icon"
+          aria-hidden="true"
+        >✦</span>
+
         <div>
           <p>PLANET MISSION COMPLETE</p>
           <h2>恭喜你完成這個星球的全部題目！</h2>
@@ -847,7 +820,7 @@
     setText(elements.xp, "");
 
     if (elements.solutionText) {
-      elements.solutionText.innerHTML = "";
+      elements.solutionText.replaceChildren();
     }
   }
 
@@ -862,7 +835,10 @@
       "answer-message";
   }
 
-  function showMessage(message, type) {
+  function showMessage(
+    message,
+    type
+  ) {
     if (!elements.answerMessage) {
       return;
     }
