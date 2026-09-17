@@ -295,14 +295,18 @@
     clearResult();
     closeHint();
 
+    const progressPercentage = Math.round(
+      ((currentIndex + 1) / questions.length) * 100
+    );
+
     setText(
       elements.questionNumber,
-      `${currentIndex + 1} / ${questions.length}`
+      `第 ${currentIndex + 1} 題 · 共 ${questions.length} 題`
     );
 
     setText(
       elements.progressText,
-      `已進入第 ${currentIndex + 1} 個挑戰任務`
+      `目前完成 ${progressPercentage}% · 正在進行第 ${currentIndex + 1} 題`
     );
 
     setText(
@@ -336,7 +340,7 @@
 
     setText(
       elements.points,
-      `✦ +${question.points ?? 5} 分`
+      `✦ 本題 ${question.points ?? 5} 分`
     );
 
     setText(
@@ -345,9 +349,16 @@
       `第 ${currentIndex + 1} 題`
     );
 
+    const questionText =
+      formatText(question.question_text);
+
     setText(
       elements.questionText,
-      formatText(question.question_text)
+      questionText
+    );
+
+    renderMath(
+      elements.questionText
     );
 
     setText(
@@ -577,7 +588,7 @@
     const points =
       result.points_awarded ??
       result.points ??
-      (isCorrect ? 5 : 0);
+      0;
 
     const xp =
       result.xp_awarded ??
@@ -709,10 +720,10 @@
       element.textContent = rawSolution;
     }
 
-    renderSolutionMath(element);
+    renderMath(element);
   }
 
-  function renderSolutionMath(element) {
+  function renderMath(element) {
     if (!element) {
       return;
     }
