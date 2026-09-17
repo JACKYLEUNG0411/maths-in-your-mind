@@ -1,10 +1,40 @@
-const SUPABASE_URL =
-  "https://zlafcarhdhtugcmeaqzv.supabase.co";
+(() => {
+  "use strict";
 
-const SUPABASE_KEY =
-  "sb_publishable_msVVLrRWTYHKAnia15J-Pw_nDdcK3Mb";
+  const SUPABASE_URL =
+    "https://zlafcarhdhtugcmeaqzv.supabase.co";
 
-window.db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+  const SUPABASE_KEY =
+    "sb_publishable_msVVLrRWTYHKAnia15J-Pw_nDdcK3Mb";
+
+  if (
+    !SUPABASE_URL ||
+    !SUPABASE_KEY
+  ) {
+    throw new Error(
+      "Supabase 設定不完整。"
+    );
+  }
+
+  if (
+    !window.supabase ||
+    typeof window.supabase.createClient !==
+      "function"
+  ) {
+    throw new Error(
+      "Supabase JavaScript SDK 尚未載入。"
+    );
+  }
+
+  window.db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    }
+  );
+})();
