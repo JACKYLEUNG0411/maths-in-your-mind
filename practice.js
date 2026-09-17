@@ -331,6 +331,13 @@
     clearResult();
     closeHint();
 
+    function formatQuestionText(value) {
+  return String(value ?? "")
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "\t");
+}
+
     setText(
       elements.questionNumber,
       `任務 ${currentIndex + 1} / ${questions.length}`
@@ -380,9 +387,10 @@
     );
 
     setText(
-      elements.questionText,
-      question.question_text || ""
-    );
+  elements.questionText,
+  formatQuestionText(question.question_text)
+);
+
 
     setText(
       elements.hintText,
