@@ -3345,3 +3345,479 @@ footer p {
     transition-duration: 0.001ms !important;
   }
 }
+/* =========================================================
+   FINAL PRACTICE READABILITY FIX
+   答案框、解題步驟及題目排版修正
+   必須放在 styles.css 最底部
+   ========================================================= */
+
+/* =========================================================
+   1. 題目文字排版
+   ========================================================= */
+
+.practice-universe-body .question-text {
+  display: block !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 22px 0 0 !important;
+  padding: 0 !important;
+
+  color: #eef3ff !important;
+  font-size: clamp(18px, 2.2vw, 21px) !important;
+  font-weight: 500 !important;
+  line-height: 1.9 !important;
+  letter-spacing: 0 !important;
+  text-align: left !important;
+
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
+  line-break: strict !important;
+}
+
+.practice-universe-body .question-text p {
+  margin: 0 0 18px !important;
+  color: #eef3ff !important;
+  font-size: inherit !important;
+  line-height: 1.9 !important;
+  text-align: left !important;
+}
+
+.practice-universe-body .question-text p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.practice-universe-body .question-text br {
+  line-height: 1.9 !important;
+}
+
+/* 題目內一般文字 */
+.practice-universe-body .question-text span,
+.practice-universe-body .question-text strong,
+.practice-universe-body .question-text em {
+  color: #eef3ff !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* 題目內強調文字 */
+.practice-universe-body .question-text strong {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+
+/* 題目內公式 */
+.practice-universe-body .question-text .katex,
+.practice-universe-body .question-text .katex * {
+  color: #ffffff !important;
+}
+
+.practice-universe-body .question-text .katex-display {
+  display: block !important;
+  max-width: 100% !important;
+  margin: 20px 0 !important;
+  padding: 4px 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  text-align: center !important;
+  white-space: normal !important;
+}
+
+.practice-universe-body .question-text .katex-display:first-child {
+  margin-top: 10px !important;
+}
+
+.practice-universe-body .question-text .katex-display:last-child {
+  margin-bottom: 5px !important;
+}
+
+/* 題目標題 */
+.practice-universe-body .question-card h2 {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: clamp(25px, 3.5vw, 34px) !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+}
+
+/* 題目卡與答案卡之間的距離 */
+.practice-universe-body .question-divider {
+  margin: 26px 0 !important;
+}
+
+/* =========================================================
+   2. 輸入答案框
+   ========================================================= */
+
+.practice-universe-body #answerInput {
+  width: 100% !important;
+  min-height: 54px !important;
+  padding: 0 16px !important;
+
+  border: 2px solid #6376b8 !important;
+  border-radius: 12px !important;
+
+  color: #ffffff !important;
+  background: #080f2c !important;
+
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+  letter-spacing: 0.01em !important;
+
+  caret-color: #65f4d0 !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 4px 12px rgba(0, 0, 0, 0.18) !important;
+}
+
+.practice-universe-body #answerInput::placeholder {
+  color: #91a1cb !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
+.practice-universe-body #answerInput:focus {
+  border-color: #58ead3 !important;
+  color: #ffffff !important;
+  background: #091536 !important;
+  outline: none !important;
+  box-shadow:
+    0 0 0 4px rgba(53, 242, 208, 0.16),
+    0 7px 18px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* 已提交後的輸入框仍然保持可讀 */
+.practice-universe-body #answerInput:disabled {
+  border-color: #53658e !important;
+  color: #ffffff !important;
+  background: #182343 !important;
+  opacity: 1 !important;
+}
+
+/* =========================================================
+   3. 提交按鈕
+   ========================================================= */
+
+.practice-universe-body #submitAnswer,
+.practice-universe-body .submit-answer-button {
+  min-height: 54px !important;
+  padding: 0 21px !important;
+  border: 2px solid #66f1d9 !important;
+  border-radius: 12px !important;
+
+  color: #032d2e !important;
+  background: linear-gradient(
+    135deg,
+    #5cf0d7,
+    #20c7b0
+  ) !important;
+
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  text-shadow: none !important;
+  box-shadow:
+    0 5px 14px rgba(20, 184, 166, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+.practice-universe-body #submitAnswer:hover:not(:disabled),
+.practice-universe-body .submit-answer-button:hover:not(:disabled) {
+  color: #021e20 !important;
+  background: linear-gradient(
+    135deg,
+    #7af6e1,
+    #2dd4bf
+  ) !important;
+  transform: translateY(-2px) !important;
+}
+
+.practice-universe-body #submitAnswer:disabled,
+.practice-universe-body .submit-answer-button:disabled {
+  border-color: #73819e !important;
+  color: #ffffff !important;
+  background: #63728c !important;
+  opacity: 1 !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   4. 答對／答錯訊息
+   ========================================================= */
+
+.practice-universe-body .answer-message {
+  margin: 18px 0 0 !important;
+  padding: 14px 16px !important;
+  border-radius: 12px !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  line-height: 1.6 !important;
+}
+
+.practice-universe-body .answer-message.message-success {
+  border: 1px solid #42e6b5 !important;
+  color: #caffeb !important;
+  background: #124e49 !important;
+}
+
+.practice-universe-body .answer-message.message-error {
+  border: 1px solid #fb7185 !important;
+  color: #ffe5ea !important;
+  background: #54243e !important;
+}
+
+/* =========================================================
+   5. 正確答案框
+   ========================================================= */
+
+.practice-universe-body .verified-answer-section {
+  display: block !important;
+  margin-top: 18px !important;
+  padding: 18px !important;
+
+  border: 1px solid rgba(66, 229, 178, 0.65) !important;
+  border-radius: 16px !important;
+
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(52, 211, 153, 0.2),
+      transparent 42%
+    ),
+    #082f38 !important;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 22px rgba(0, 0, 0, 0.16) !important;
+}
+
+.practice-universe-body .verified-answer-heading {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+}
+
+.practice-universe-body .verified-answer-heading p {
+  margin: 0 0 3px !important;
+  color: #78f0c2 !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.14em !important;
+}
+
+.practice-universe-body .verified-answer-heading h3 {
+  margin: 0 !important;
+  color: #ffffff !important;
+  font-size: 17px !important;
+  font-weight: 850 !important;
+  line-height: 1.3 !important;
+}
+
+/*
+  注意：
+  這裡使用深色背景配淺色文字，
+  避免出現「淺綠背景＋白色文字」而看不清楚。
+*/
+.practice-universe-body #correctAnswer,
+.practice-universe-body #correctAnswer.correct-answer-box,
+.practice-universe-body .correct-answer-box {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 76px !important;
+
+  margin: 17px 0 0 !important;
+  padding: 14px 20px !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 2px solid #4df0ba !important;
+  border-radius: 13px !important;
+
+  color: #ffffff !important;
+  background:
+    linear-gradient(
+      135deg,
+      #105c55 0%,
+      #0b4547 52%,
+      #082f3b 100%
+    ) !important;
+
+  box-shadow:
+    0 0 0 4px rgba(52, 211, 153, 0.08),
+    0 0 24px rgba(52, 211, 153, 0.17),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+
+  font-size: clamp(25px, 4vw, 36px) !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0.02em !important;
+  text-align: center !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+/* 如果正確答案裡面有 span、strong 或 KaTeX */
+.practice-universe-body #correctAnswer *,
+.practice-universe-body .correct-answer-box *,
+.practice-universe-body #correctAnswer .katex,
+.practice-universe-body #correctAnswer .katex * {
+  color: #ffffff !important;
+  background: transparent !important;
+  text-shadow: none !important;
+}
+
+/* =========================================================
+   6. 解題步驟
+   ========================================================= */
+
+.practice-universe-body .solution-section {
+  margin-top: 17px !important;
+  padding: 17px 18px !important;
+
+  border: 1px solid rgba(129, 140, 248, 0.3) !important;
+  border-left: 4px solid #818cf8 !important;
+  border-radius: 0 12px 12px 0 !important;
+
+  color: #e9eeff !important;
+  background: #182657 !important;
+
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+.practice-universe-body .solution-heading {
+  margin: 0 0 10px !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 850 !important;
+  line-height: 1.5 !important;
+}
+
+.practice-universe-body #solutionText,
+.practice-universe-body #solutionText p,
+.practice-universe-body #solutionText div,
+.practice-universe-body #solutionText span,
+.practice-universe-body #solutionText strong,
+.practice-universe-body #solutionText em,
+.practice-universe-body #solutionText li {
+  box-sizing: border-box !important;
+  color: #e5ebff !important;
+  background: transparent !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 1.85 !important;
+  text-shadow: none !important;
+}
+
+.practice-universe-body #solutionText {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.practice-universe-body #solutionText p {
+  margin: 0 0 11px !important;
+}
+
+.practice-universe-body #solutionText p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.practice-universe-body #solutionText strong {
+  color: #9af5d3 !important;
+  font-weight: 800 !important;
+}
+
+.practice-universe-body #solutionText .katex,
+.practice-universe-body #solutionText .katex * {
+  color: #f0f4ff !important;
+}
+
+.practice-universe-body #solutionText .katex-display {
+  max-width: 100% !important;
+  margin: 15px 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  text-align: center !important;
+}
+
+/* =========================================================
+   7. 答案區整體間距
+   ========================================================= */
+
+.practice-universe-body .answer-card-heading {
+  margin-bottom: 20px !important;
+}
+
+.practice-universe-body .answer-card-heading h2 {
+  margin: 0 !important;
+  color: #ffffff !important;
+  line-height: 1.3 !important;
+}
+
+.practice-universe-body .answer-format-note {
+  margin: 10px 0 0 !important;
+  color: #9caad0 !important;
+  font-size: 12px !important;
+  line-height: 1.6 !important;
+}
+
+.practice-universe-body .reward-grid {
+  gap: 12px !important;
+}
+
+.practice-universe-body .reward-item {
+  background: #121f48 !important;
+}
+
+.practice-universe-body .reward-item span {
+  color: #aab8dc !important;
+}
+
+.practice-universe-body .reward-item strong {
+  color: #ffd65a !important;
+}
+
+/* =========================================================
+   8. 手機版
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .practice-universe-body .question-text {
+    font-size: 17px !important;
+    line-height: 1.85 !important;
+  }
+
+  .practice-universe-body .question-text .katex-display {
+    margin: 16px 0 !important;
+  }
+
+  .practice-universe-body .answer-input-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 11px !important;
+  }
+
+  .practice-universe-body #submitAnswer,
+  .practice-universe-body .submit-answer-button {
+    width: 100% !important;
+  }
+
+  .practice-universe-body #correctAnswer,
+  .practice-universe-body .correct-answer-box {
+    min-height: 70px !important;
+    padding: 13px 15px !important;
+    font-size: 25px !important;
+  }
+
+  .practice-universe-body #solutionText,
+  .practice-universe-body #solutionText p,
+  .practice-universe-body #solutionText div,
+  .practice-universe-body #solutionText span {
+    font-size: 15px !important;
+    line-height: 1.8 !important;
+  }
+}
