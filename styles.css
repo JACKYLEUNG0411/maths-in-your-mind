@@ -3543,3 +3543,169 @@ footer {
 .question-text {
   white-space: pre-line;
 }
+/* =========================================================
+   Practice page final polish
+   KaTeX、解題步驟、無障礙與手機版修正
+   必須放在 styles.css 最底部
+   ========================================================= */
+
+/* 解題步驟基本排版 */
+.practice-universe-body #solutionText {
+  width: 100%;
+  min-width: 0;
+  margin-top: 10px;
+  color: #e5ebff !important;
+  font-size: 16px !important;
+  line-height: 1.85 !important;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.practice-universe-body #solutionText p {
+  margin: 0 0 12px !important;
+  color: #e5ebff !important;
+  background: transparent !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.practice-universe-body #solutionText p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* 粗體答案 */
+.practice-universe-body #solutionText strong,
+.practice-universe-body #solutionText b {
+  color: #8bf3cc !important;
+  font-weight: 800 !important;
+}
+
+/* 解題步驟中的列表 */
+.practice-universe-body #solutionText ul,
+.practice-universe-body #solutionText ol {
+  margin: 0 0 12px;
+  padding-left: 1.5rem;
+  color: #e5ebff;
+}
+
+.practice-universe-body #solutionText li {
+  margin: 4px 0;
+  color: #e5ebff !important;
+  background: transparent !important;
+}
+
+/* =========================================================
+   KaTeX 修正
+   重要：目前舊規則有 #solutionText span，
+   會影響 KaTeX 自己產生的大量 span。
+   所以這裡必須放在所有舊規則之後。
+   ========================================================= */
+
+.practice-universe-body #solutionText .katex {
+  color: #f1f5ff !important;
+  font-size: 1.08em !important;
+  line-height: 1.35 !important;
+}
+
+/* 讓 KaTeX 內部 span 不被普通解題文字規則破壞 */
+.practice-universe-body #solutionText .katex span {
+  color: inherit !important;
+  background: transparent !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+}
+
+/* 獨立公式 */
+.practice-universe-body #solutionText .katex-display {
+  max-width: 100%;
+  margin: 0.9rem 0 !important;
+  padding: 0.35rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  color: #f1f5ff !important;
+  text-align: center;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 行內公式不要出現不必要的橫向捲軸 */
+.practice-universe-body #solutionText .katex-inline {
+  overflow-wrap: normal;
+}
+
+/* 公式中的錯誤不要破壞整個頁面 */
+.practice-universe-body #solutionText .katex-error {
+  color: #ffd28a !important;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* =========================================================
+   Solution section
+   ========================================================= */
+
+.practice-universe-body .solution-section {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.practice-universe-body .solution-heading {
+  user-select: none;
+}
+
+/* =========================================================
+   鍵盤操作焦點
+   ========================================================= */
+
+.practice-universe-body
+  button:focus-visible,
+.practice-universe-body
+  a:focus-visible,
+.practice-universe-body
+  input:focus-visible {
+  outline: 3px solid #fcd34d !important;
+  outline-offset: 3px;
+}
+
+/* =========================================================
+   Loading 狀態避免頁面仍可操作
+   ========================================================= */
+
+.practice-universe-body .loading-overlay[hidden] {
+  pointer-events: none;
+}
+
+/* =========================================================
+   手機版
+   ========================================================= */
+
+@media (max-width: 700px) {
+  .practice-universe-body #solutionText {
+    font-size: 15px !important;
+    line-height: 1.8 !important;
+  }
+
+  .practice-universe-body #solutionText .katex {
+    font-size: 1em !important;
+  }
+
+  .practice-universe-body #solutionText .katex-display {
+    margin: 0.75rem -4px !important;
+    padding: 0.35rem 4px;
+    text-align: left;
+  }
+}
+
+/* =========================================================
+   減少動畫設定
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .practice-universe-body .result-panel {
+    animation: none !important;
+  }
+
+  .practice-universe-body .progress-bar {
+    transition: none !important;
+  }
+}
