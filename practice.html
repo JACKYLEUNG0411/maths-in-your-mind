@@ -27,7 +27,6 @@
 
   <main class="practice-page">
 
-    <!-- 頂部導航及星球資料 -->
     <header class="practice-header">
       <div class="practice-header-top">
         <a
@@ -39,13 +38,19 @@
         </a>
 
         <div class="mission-label">
-          <span class="mission-dot"></span>
+          <span
+            class="mission-dot"
+            aria-hidden="true"
+          ></span>
           LIVE PRACTICE MISSION
         </div>
       </div>
 
       <section class="planet-hero">
-        <div class="planet-hero-icon" aria-hidden="true">
+        <div
+          class="planet-hero-icon"
+          aria-hidden="true"
+        >
           ✦
         </div>
 
@@ -85,6 +90,7 @@
           <div
             id="questionNumber"
             class="question-counter"
+            aria-live="polite"
           >
             -- / --
           </div>
@@ -103,7 +109,6 @@
       </section>
     </header>
 
-    <!-- 題目任務卡 -->
     <section
       class="mission-card question-card"
       aria-live="polite"
@@ -168,7 +173,6 @@
         class="question-text"
       ></div>
 
-      <!-- 提示：預設收起 -->
       <div class="hint-panel">
         <button
           id="toggleHint"
@@ -210,7 +214,6 @@
       </div>
     </section>
 
-    <!-- 作答卡 -->
     <section class="mission-card answer-card">
       <div class="answer-card-heading">
         <div>
@@ -242,6 +245,7 @@
           autocapitalize="off"
           autocorrect="off"
           spellcheck="false"
+          aria-describedby="answerFormatNote"
           placeholder="例如：x^2、a+b、3:4、1.6 km"
         >
 
@@ -255,7 +259,10 @@
         </button>
       </div>
 
-      <p class="answer-format-note">
+      <p
+        id="answerFormatNote"
+        class="answer-format-note"
+      >
         可輸入數字、百分數、比例或附有單位的答案。
       </p>
 
@@ -267,11 +274,11 @@
         hidden
       ></div>
 
-      <!-- 答題後的結果卡 -->
       <section
         id="resultPanel"
         class="result-panel"
         hidden
+        aria-live="polite"
       >
         <div
           id="resultStatus"
@@ -322,7 +329,6 @@
       </section>
     </section>
 
-    <!-- 題目導航 -->
     <nav
       class="question-navigation"
       aria-label="題目導航"
@@ -351,7 +357,10 @@
       class="loading-overlay"
       aria-live="polite"
     >
-      <div class="loading-orbit">
+      <div
+        class="loading-orbit"
+        aria-hidden="true"
+      >
         <span></span>
       </div>
 
@@ -366,7 +375,6 @@
 
   </main>
 
-  <!-- 外部 JavaScript -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script
@@ -377,8 +385,12 @@
     src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"
   ></script>
 
+  <script
+    src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"
+  ></script>
+
   <script src="config.js"></script>
-  <script src="practice.js?v=8"></script>
+  <script src="practice.js?v=10"></script>
 
 </body>
 </html>
