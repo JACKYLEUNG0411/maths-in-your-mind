@@ -699,15 +699,20 @@
 
     /*
       solution 是教師／管理員預先寫入的解題內容。
-
-      這裡使用 innerHTML，讓資料庫中存放的
-      <p>、<strong>、<br> 等標籤正常呈現。
+      使用 innerHTML 讓 HTML 標籤正常顯示。
     */
     if (elements.solutionText) {
-      elements.solutionText.innerHTML =
+      const solution =
         result.solution ||
         result.explanation ||
         "暫無解題步驟。";
+
+      elements.solutionText.innerHTML =
+        solution;
+
+      renderSolutionMath(
+        elements.solutionText
+      );
     }
 
     if (elements.resultPanel) {
@@ -724,6 +729,53 @@
       elements.submitAnswer.innerHTML =
         '<span aria-hidden="true">✓</span> 已提交答案';
     }
+  }
+
+  /*
+    將解題步驟中的 KaTeX 標記轉成數學公式。
+
+    行內公式：
+    $$3x+5=20$$
+
+    獨立公式：
+    $$3x+5=20$$
+
+    或：
+
+    $$3x+5=20$$
+  */
+  function renderSolutionMath(element) {
+    if (!element) {
+      return;
+    }
+
+    if (
+      typeof window.renderMathInElement !==
+      "function"
+    ) {
+      return;
+    }
+
+    window.renderMathInElement(element, {
+      delimiters: [
+        {
+          left: "$$",
+          right: "$$",
+          display: true
+        },
+        {
+          left: "\$$",
+          right: "\$$",
+          display: true
+        },
+        {
+          left: "\$$",
+          right: "\$$",
+          display: false
+        }
+      ],
+      throwOnError: false
+    });
   }
 
   function showPreviousQuestion() {
