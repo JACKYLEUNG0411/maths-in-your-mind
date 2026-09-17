@@ -735,27 +735,41 @@
       return;
     }
 
-    window.renderMathInElement(element, {
-      delimiters: [
-        {
-          left: "$$",
-          right: "$$",
-          display: true
-        },
-        {
-          left: "\$$",
-          right: "\$$",
-          display: true
-        },
-        {
-          left: "\$$",
-          right: "\$$",
-          display: false
-        }
-      ],
-      throwOnError: false,
-      strict: "ignore"
-    });
+window.renderMathInElement(element, {
+  delimiters: [
+    // LaTeX 行內公式：會和中文字、數字連在一起
+    {
+      left: "\$$",
+      right: "\$$",
+      display: false
+    },
+
+    // 單一美元符號行內公式
+    {
+      left: "$",
+      right: "$",
+      display: false
+    },
+
+    // 如果舊題目使用 $$...$$，也當作行內公式處理
+    {
+      left: "$$",
+      right: "$$",
+      display: false
+    },
+
+    // 只有 $$...$$ 才會獨立置中
+    {
+      left: "\$$",
+      right: "\$$",
+      display: true
+    }
+  ],
+
+  throwOnError: false,
+  strict: "ignore"
+});
+
   }
 
   function showPreviousQuestion() {
