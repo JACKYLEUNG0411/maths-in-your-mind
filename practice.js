@@ -258,32 +258,29 @@
     }
   }
 
- function bindEvents() {
-  if (elements.answerInput) {
-    elements.answerInput.type = "text";
-    elements.answerInput.inputMode = "text";
-    elements.answerInput.removeAttribute("pattern");
-    elements.answerInput.setAttribute(
-      "autocapitalize",
-      "off"
-    );
-    elements.answerInput.setAttribute(
-      "autocomplete",
-      "off"
-    );
-    elements.answerInput.setAttribute(
-      "autocorrect",
-      "off"
-    );
-    elements.answerInput.spellcheck = false;
-  }
+  function bindEvents() {
+    if (elements.answerInput) {
+      elements.answerInput.type = "text";
+      elements.answerInput.inputMode = "text";
+      elements.answerInput.removeAttribute("pattern");
 
-  elements.submitAnswer?.addEventListener(
-    "click",
-    submitCurrentAnswer
-  );
+      elements.answerInput.setAttribute(
+        "autocapitalize",
+        "off"
+      );
 
-  // 以下原本內容保持不變
+      elements.answerInput.setAttribute(
+        "autocomplete",
+        "off"
+      );
+
+      elements.answerInput.setAttribute(
+        "autocorrect",
+        "off"
+      );
+
+      elements.answerInput.spellcheck = false;
+    }
 
     elements.submitAnswer?.addEventListener(
       "click",
@@ -332,11 +329,11 @@
     closeHint();
 
     function formatQuestionText(value) {
-  return String(value ?? "")
-    .replace(/\\r\\n/g, "\n")
-    .replace(/\\n/g, "\n")
-    .replace(/\\t/g, "\t");
-}
+      return String(value ?? "")
+        .replace(/\\r\\n/g, "\n")
+        .replace(/\\n/g, "\n")
+        .replace(/\\t/g, "\t");
+    }
 
     setText(
       elements.questionNumber,
@@ -387,10 +384,9 @@
     );
 
     setText(
-  elements.questionText,
-  formatQuestionText(question.question_text)
-);
-
+      elements.questionText,
+      formatQuestionText(question.question_text)
+    );
 
     setText(
       elements.hintText,
@@ -421,18 +417,26 @@
 
   function getDifficultyText(difficulty) {
     const level = Number(difficulty) || 1;
+
     const filled = "●".repeat(
       Math.min(Math.max(level, 1), 3)
     );
+
     const empty = "○".repeat(
-      Math.max(3 - Math.min(Math.max(level, 1), 3), 0)
+      Math.max(
+        3 - Math.min(Math.max(level, 1), 3),
+        0
+      )
     );
 
     return `難度 ${filled}${empty}`;
   }
 
   function updateProgress() {
-    if (!elements.progress || questions.length === 0) {
+    if (
+      !elements.progress ||
+      questions.length === 0
+    ) {
       return;
     }
 
@@ -594,9 +598,10 @@
       elements.submitAnswer.disabled =
         isSubmitting;
 
-      elements.submitAnswer.innerHTML = isSubmitting
-        ? '<span aria-hidden="true">◌</span> 正在驗證答案…'
-        : '<span aria-hidden="true">✦</span> 提交答案';
+      elements.submitAnswer.innerHTML =
+        isSubmitting
+          ? '<span aria-hidden="true">◌</span> 正在驗證答案…'
+          : '<span aria-hidden="true">✦</span> 提交答案';
     }
   }
 
@@ -604,11 +609,13 @@
     if (elements.answerInput) {
       elements.answerInput.value =
         result.submitted_answer || "";
+
       elements.answerInput.disabled = true;
     }
 
     if (elements.submitAnswer) {
       elements.submitAnswer.disabled = true;
+
       elements.submitAnswer.innerHTML =
         '<span aria-hidden="true">✓</span> 已提交答案';
     }
@@ -670,7 +677,8 @@
     }
 
     /*
-      正確答案以 textContent 輸出，不會執行答案字串中的 HTML。
+      正確答案使用 textContent 輸出，
+      不解析答案中的 HTML。
     */
     setText(
       elements.correctAnswer,
@@ -689,17 +697,17 @@
       xp ? `+${xp} XP` : "0 XP"
     );
 
-    if (elements.solutionText) {
-      /*
-        solution 是教師／管理員預先寫入的解題內容。
-      */
-    setText(
-  elements.solutionText,
-  result.solution ||
-  result.explanation ||
-  "暫無解題步驟。"
-);
+    /*
+      solution 是教師／管理員預先寫入的解題內容。
 
+      這裡使用 innerHTML，讓資料庫中存放的
+      <p>、<strong>、<br> 等標籤正常呈現。
+    */
+    if (elements.solutionText) {
+      elements.solutionText.innerHTML =
+        result.solution ||
+        result.explanation ||
+        "暫無解題步驟。";
     }
 
     if (elements.resultPanel) {
@@ -712,6 +720,7 @@
 
     if (elements.submitAnswer) {
       elements.submitAnswer.disabled = true;
+
       elements.submitAnswer.innerHTML =
         '<span aria-hidden="true">✓</span> 已提交答案';
     }
@@ -732,7 +741,9 @@
   }
 
   function showNextQuestion() {
-    if (currentIndex >= questions.length - 1) {
+    if (
+      currentIndex >= questions.length - 1
+    ) {
       return;
     }
 
@@ -748,6 +759,7 @@
   function showCompleted() {
     if (elements.completedMessage) {
       elements.completedMessage.hidden = false;
+
       elements.completedMessage.innerHTML = `
         <span class="completed-icon">✦</span>
         <div>
@@ -774,7 +786,8 @@
 
     if (elements.resultStatus) {
       elements.resultStatus.textContent = "";
-      elements.resultStatus.className = "result-status";
+      elements.resultStatus.className =
+        "result-status";
     }
 
     setText(elements.correctAnswer, "");
