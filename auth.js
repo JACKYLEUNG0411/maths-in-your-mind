@@ -49,49 +49,64 @@ loginForm.addEventListener("submit", async (event) => {
   button.disabled = true;
   button.textContent = "身份驗證中...";
 
-  const { error } =
-    await window.db.auth.signInWithPassword({
-      email:
-        document
-          .getElementById("loginEmail")
-          .value.trim(),
+  try {
+    const { error } = await withRetry(
+      () =>
+        window.db.auth.signInWithPassword({
+          email:
+            document
+              .getElementById("loginEmail")
+              .value.trim(),
 
-      password:
-        document
-          .getElementById("loginPassword")
-          .value
-    });
+          password:
+            document
+              .getElementById("loginPassword")
+              .value
+        }),
+      { retries: 1 }
+    );
 
-  button.disabled = false;
-  button.textContent = "登上探索飛船";
+    if (error) {
+      showMessage(
+        authMessage,
+        getFriendlyErrorMessage(
+          error,
+          "登入失敗，請稍後再試。"
+        ),
+        "error"
+      );
+      return;
+    }
 
-  if (error) {
+    playTone(720, 0.15, "square");
+
+    const parameters =
+      new URLSearchParams(location.search);
+
+    const requested =
+      parameters.get("next") || "levels.html";
+
+    const allowed =
+      /^(levels|practice|leaderboard)\.html(\?.*)?$/.test(
+        requested
+      );
+
+    location.href =
+      allowed ? requested : "levels.html";
+  } catch (error) {
+    console.error(error);
     showMessage(
       authMessage,
-      error.message.includes("Invalid login")
-        ? "電郵或密碼不正確。"
-        : error.message,
+      getFriendlyErrorMessage(
+        error,
+        "登入失敗，請稍後再試。"
+      ),
       "error"
     );
-
-    return;
+  } finally {
+    button.disabled = false;
+    button.textContent = "登上探索飛船";
   }
-
-  playTone(720, 0.15, "square");
-
-  const parameters =
-    new URLSearchParams(location.search);
-
-  const requested =
-    parameters.get("next") || "levels.html";
-
-  const allowed =
-    /^(levels|practice|leaderboard)\.html(\?.*)?$/.test(
-      requested
-    );
-
-  location.href =
-    allowed ? requested : "levels.html";
 });
 
 registerForm.addEventListener(
@@ -154,42 +169,60 @@ registerForm.addEventListener(
     button.disabled = true;
     button.textContent = "正在建造飛船...";
 
-    const { data, error } =
-      await window.db.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            display_name: displayName
-          }
-        }
-      });
+    try {
+      const { data, error } = await withRetry(
+        () =>
+          window.db.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                display_name: displayName
+              }
+            }
+          }),
+        { retries: 1 }
+      );
 
-    button.disabled = false;
-    button.textContent =
-      "建立探索者與飛船";
+      if (error) {
+        showMessage(
+          authMessage,
+          getFriendlyErrorMessage(
+            error,
+            "建立帳戶失敗，請稍後再試。"
+          ),
+          "error"
+        );
+        return;
+      }
 
-    if (error) {
+      if (!data.session) {
+        showMessage(
+          authMessage,
+          "帳戶已建立，請到信箱確認電郵後登入。",
+          "success"
+        );
+
+        switchMode("login");
+        return;
+      }
+
+      location.href = "levels.html";
+    } catch (error) {
+      console.error(error);
       showMessage(
         authMessage,
-        error.message,
+        getFriendlyErrorMessage(
+          error,
+          "建立帳戶失敗，請稍後再試。"
+        ),
         "error"
       );
-      return;
+    } finally {
+      button.disabled = false;
+      button.textContent =
+        "建立探索者與飛船";
     }
-
-    if (!data.session) {
-      showMessage(
-        authMessage,
-        "帳戶已建立，請到信箱確認電郵後登入。",
-        "success"
-      );
-
-      switchMode("login");
-      return;
-    }
-
-    location.href = "levels.html";
   }
 );
 

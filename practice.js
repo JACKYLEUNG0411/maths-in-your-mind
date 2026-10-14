@@ -50,12 +50,10 @@
     window.location.search
   );
 
-  const levelId = Number(
-    params.get("level_id") ||
-    params.get("level") ||
-    params.get("id") ||
-    1
-  );
+  const levelIdInfo =
+    resolveLevelIdFromQuery(params);
+
+  const levelId = levelIdInfo.value;
 
   let db = null;
   let currentUser = null;
@@ -79,17 +77,15 @@
         );
       }
 
-      if (
-        !Number.isInteger(levelId) ||
-        levelId <= 0
-      ) {
-        throw new Error(
-          "網址中沒有有效的 level_id。"
-        );
-      }
-
       bindEvents();
       showLoading(true);
+
+      if (levelIdInfo.wasInvalidParam) {
+        showMessage(
+          "網址中的關卡參數無效，已切換到 1 號星球。",
+          "error"
+        );
+      }
 
       await checkLogin();
       await loadLevel();
@@ -107,9 +103,14 @@
       console.error(error);
 
       showMessage(
-        "系統暫時無法載入資料，請稍後再試。",
+        getFriendlyErrorMessage(
+          error,
+          "系統暫時無法載入資料，請稍後再試。"
+        ),
         "error"
       );
+
+      showFatalFallback();
     } finally {
       showLoading(false);
     }
@@ -146,11 +147,15 @@
     const {
       data,
       error
-    } = await db
-      .from("levels")
-      .select("*")
-      .eq("id", levelId)
-      .maybeSingle();
+    } = await withRetry(
+      () =>
+        db
+          .from("levels")
+          .select("id, name, description")
+          .eq("id", levelId)
+          .maybeSingle(),
+      { retries: 1 }
+    );
 
     if (error) {
       throw error;
@@ -177,29 +182,33 @@
     const {
       data,
       error
-    } = await db
-      .from("questions")
-      .select(`
-        id,
-        level_id,
-        question_order,
-        title,
-        question_text,
-        hint,
-        topic,
-        zone_name,
-        zone_description,
-        zone_icon,
-        difficulty,
-        dse_topic,
-        question_type,
-        is_challenge,
-        points
-      `)
-      .eq("level_id", levelId)
-      .order("question_order", {
-        ascending: true
-      });
+    } = await withRetry(
+      () =>
+        db
+          .from("questions")
+          .select(`
+            id,
+            level_id,
+            question_order,
+            title,
+            question_text,
+            hint,
+            topic,
+            zone_name,
+            zone_description,
+            zone_icon,
+            difficulty,
+            dse_topic,
+            question_type,
+            is_challenge,
+            points
+          `)
+          .eq("level_id", levelId)
+          .order("question_order", {
+            ascending: true
+          }),
+      { retries: 1 }
+    );
 
     if (error) {
       throw error;
@@ -213,7 +222,58 @@
   async function loadSubmittedAnswers() {
     submittedResults.clear();
 
-    for (const question of questions) {
+    const questionIds = questions
+      .map((question) => question.id)
+      .filter((id) => Number.isFinite(id));
+
+    if (questionIds.length === 0) {
+      return;
+    }
+
+    try {
+      const {
+        data,
+        error
+      } = await withRetry(
+        () =>
+          db
+            .from("answers")
+            .select(
+              "question_id, submitted_answer, is_correct, points_awarded, xp_awarded, correct_answer, solution, explanation, answer, correct, points, xp"
+            )
+            .in("question_id", questionIds),
+        { retries: 1 }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      if (Array.isArray(data)) {
+        data.forEach((result) => {
+          if (!result?.question_id) return;
+          submittedResults.set(
+            result.question_id,
+            result
+          );
+        });
+      }
+
+      return;
+    } catch (error) {
+      console.warn(
+        "批量讀取作答紀錄失敗，改用單題回退模式。",
+        error
+      );
+    }
+
+    await loadSubmittedAnswersByRpc(questionIds);
+  }
+
+  async function loadSubmittedAnswersByRpc(
+    questionIds
+  ) {
+    for (const questionId of questionIds) {
       try {
         const {
           data,
@@ -221,13 +281,13 @@
         } = await db.rpc(
           "get_my_answer",
           {
-            p_question_id: question.id
+            p_question_id: questionId
           }
         );
 
         if (error) {
           console.warn(
-            `讀取題目 ${question.id} 紀錄失敗`,
+            `讀取題目 ${questionId} 紀錄失敗`,
             error.message
           );
           continue;
@@ -370,6 +430,7 @@
     if (elements.answerInput) {
       elements.answerInput.value = "";
       elements.answerInput.disabled = false;
+      elements.answerInput.focus();
     }
 
     if (elements.submitAnswer) {
@@ -549,7 +610,10 @@
       setSubmitting(false);
 
       showMessage(
-        "提交答案時發生錯誤，請稍後再試。",
+        getFriendlyErrorMessage(
+          error,
+          "提交答案時發生錯誤，請稍後再試。"
+        ),
         "error"
       );
     }
@@ -597,7 +661,9 @@
 
     if (isCorrect) {
       showMessage(
-        `任務成功！你獲得了 ${points} 分。`,
+        currentIndex < questions.length - 1
+          ? `任務成功！你獲得了 ${points} 分，可前往下一題。`
+          : `任務成功！你獲得了 ${points} 分。`,
         "success"
       );
 
@@ -890,6 +956,30 @@ window.renderMathInElement(element, {
     }
   }
 
+  function showFatalFallback() {
+    if (!elements.completedMessage) {
+      return;
+    }
+
+    elements.completedMessage.hidden = false;
+    elements.completedMessage.innerHTML = `
+      <span class="completed-icon" aria-hidden="true">!</span>
+      <div>
+        <p>SYSTEM FALLBACK</p>
+        <h2>任務資料連線失敗</h2>
+        <button id="reloadPracticePage" class="game-button cyan small" type="button">
+          重新載入
+        </button>
+      </div>
+    `;
+
+    document
+      .getElementById("reloadPracticePage")
+      ?.addEventListener("click", () => {
+        window.location.reload();
+      });
+  }
+
   function setText(element, value) {
     if (!element) {
       return;
@@ -908,5 +998,30 @@ window.renderMathInElement(element, {
     }
 
     return data || null;
+  }
+
+  function resolveLevelIdFromQuery(query) {
+    const rawLevelId =
+      query.get("level_id") ||
+      query.get("level") ||
+      query.get("id");
+
+    const parsed = Number(rawLevelId);
+
+    if (
+      rawLevelId === null ||
+      (Number.isInteger(parsed) && parsed > 0)
+    ) {
+      return {
+        value:
+          rawLevelId === null ? 1 : parsed,
+        wasInvalidParam: false
+      };
+    }
+
+    return {
+      value: 1,
+      wasInvalidParam: true
+    };
   }
 })();

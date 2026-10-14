@@ -55,6 +55,101 @@ function showMessage(element, message, type = "") {
     `message ${type}`.trim();
 }
 
+function getFriendlyErrorMessage(
+  error,
+  fallbackMessage = "系統暫時無法處理你的請求，請稍後再試。"
+) {
+  const rawMessage = String(
+    error?.message || ""
+  ).toLowerCase();
+
+  if (!navigator.onLine) {
+    return "目前離線，請檢查網絡連線後再試。";
+  }
+
+  if (
+    rawMessage.includes("invalid login") ||
+    rawMessage.includes("invalid credentials")
+  ) {
+    return "電郵或密碼不正確。";
+  }
+
+  if (
+    rawMessage.includes("jwt") ||
+    rawMessage.includes("token")
+  ) {
+    return "登入狀態已過期，請重新登入。";
+  }
+
+  if (
+    rawMessage.includes("failed to fetch") ||
+    rawMessage.includes("networkerror") ||
+    rawMessage.includes("timeout")
+  ) {
+    return "網絡連線不穩定，請稍後再試。";
+  }
+
+  if (
+    rawMessage.includes("too many requests") ||
+    rawMessage.includes("rate limit")
+  ) {
+    return "操作過於頻繁，請稍後再試。";
+  }
+
+  return fallbackMessage;
+}
+
+function isTransientError(error) {
+  const rawMessage = String(
+    error?.message || ""
+  ).toLowerCase();
+
+  return (
+    !navigator.onLine ||
+    rawMessage.includes("failed to fetch") ||
+    rawMessage.includes("networkerror") ||
+    rawMessage.includes("timeout") ||
+    rawMessage.includes("429") ||
+    rawMessage.includes("too many requests") ||
+    rawMessage.includes("rate limit")
+  );
+}
+
+async function withRetry(
+  operation,
+  {
+    retries = 1,
+    delayMs = 350,
+    shouldRetry = isTransientError
+  } = {}
+) {
+  let lastError = null;
+
+  for (
+    let attempt = 0;
+    attempt <= retries;
+    attempt += 1
+  ) {
+    try {
+      return await operation(attempt);
+    } catch (error) {
+      lastError = error;
+
+      const canRetry =
+        attempt < retries &&
+        shouldRetry(error) === true;
+
+      if (!canRetry) break;
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, delayMs * (attempt + 1));
+      });
+    }
+  }
+
+  throw lastError;
+}
+
 function createShipHTML(summary = {}, small = false) {
   const level =
     Number(summary.ship_level || 1);

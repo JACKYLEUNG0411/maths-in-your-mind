@@ -3391,6 +3391,22 @@ footer p {
   line-height: 1.9 !important;
 }
 
+.practice-universe-body .submit-answer-button,
+.practice-universe-body .navigation-button,
+.practice-universe-body .hint-toggle {
+  min-height: 48px;
+}
+
+.practice-universe-body .answer-input-row input {
+  min-height: 48px;
+  padding: 0 14px;
+}
+
+.practice-universe-body .answer-input-row input:focus-visible {
+  outline: 2px solid #66e7d5;
+  outline-offset: 2px;
+}
+
 /* 題目內一般文字 */
 .practice-universe-body .question-text span,
 .practice-universe-body .question-text strong,

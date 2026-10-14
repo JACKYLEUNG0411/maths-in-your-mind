@@ -1,11 +1,42 @@
 (() => {
   "use strict";
 
+  const runtimeConfig =
+    window.__MATH_UNIVERSE_CONFIG__;
+
+  if (
+    !runtimeConfig ||
+    typeof runtimeConfig !== "object"
+  ) {
+    throw new Error(
+      "找不到執行環境設定。請先載入 app-config.js。"
+    );
+  }
+
+  const host = window.location.hostname;
+  const defaultEnvironment =
+    /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(host)
+      ? "development"
+      : "production";
+
+  const environment =
+    runtimeConfig.activeEnvironment ||
+    defaultEnvironment;
+
+  const selectedConfig =
+    runtimeConfig.environments?.[environment];
+
   const SUPABASE_URL =
-    "https://zlafcarhdhtugcmeaqzv.supabase.co";
+    selectedConfig?.supabaseUrl || "";
 
   const SUPABASE_KEY =
-    "sb_publishable_msVVLrRWTYHKAnia15J-Pw_nDdcK3Mb";
+    selectedConfig?.supabaseKey || "";
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    throw new Error(
+      `環境設定不完整（${environment}）。請檢查 app-config.js。`
+    );
+  }
 
   if (
     !window.supabase ||
@@ -28,4 +59,8 @@
       }
     }
   );
+
+  window.appRuntime = {
+    environment
+  };
 })();

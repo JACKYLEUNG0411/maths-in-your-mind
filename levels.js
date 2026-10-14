@@ -2,53 +2,100 @@ async function loadGalaxy() {
   const user = await requireLogin();
   if (!user) return;
 
-  const [
-    planetsResult,
-    questionsResult,
-    answersResult,
-    summary
-  ] = await Promise.all([
-    window.db
-      .from("levels")
-      .select("*")
-      .order("planet_order"),
+  const map = document.getElementById("galaxyMap");
+  map.innerHTML = "<p>正在同步銀河資料……</p>";
 
-    window.db
-      .from("questions")
-      .select(
-        "id, level_id, question_order"
-      )
-      .order("level_id")
-      .order("question_order"),
+  let planets = [];
+  let questions = [];
+  let answers = [];
+  let summary = null;
 
-    window.db
-      .from("answers")
-      .select(
-        "question_id, is_correct, points_awarded"
-      ),
+  try {
+    const results = await withRetry(
+      async () => {
+        const [
+          planetsResult,
+          questionsResult,
+          answersResult,
+          summaryResult
+        ] = await Promise.all([
+          window.db
+            .from("levels")
+            .select(
+              "id, name, english_name, description, coordinates, planet_style, planet_order, is_published"
+            )
+            .order("planet_order"),
 
-    getMySummary()
-  ]);
+          window.db
+            .from("questions")
+            .select(
+              "id, level_id, question_order"
+            )
+            .order("level_id")
+            .order("question_order"),
 
-  if (
-    planetsResult.error ||
-    questionsResult.error ||
-    answersResult.error ||
-    !summary
-  ) {
-    document.getElementById(
-      "galaxyMap"
-    ).innerHTML = `
+          window.db
+            .from("answers")
+            .select(
+              "question_id, is_correct, points_awarded"
+            ),
+
+          getMySummary()
+        ]);
+
+        if (planetsResult.error) {
+          throw planetsResult.error;
+        }
+
+        if (questionsResult.error) {
+          throw questionsResult.error;
+        }
+
+        if (answersResult.error) {
+          throw answersResult.error;
+        }
+
+        if (!summaryResult) {
+          throw new Error(
+            "summary_unavailable"
+          );
+        }
+
+        return [
+          planetsResult.data,
+          questionsResult.data,
+          answersResult.data,
+          summaryResult
+        ];
+      },
+      { retries: 1 }
+    );
+
+    planets = results[0] || [];
+    questions = results[1] || [];
+    answers = results[2] || [];
+    summary = results[3];
+  } catch (error) {
+    console.error(error);
+    map.innerHTML = `
       <p class="message error">
-        銀河資料載入失敗，請重新整理。
+        ${escapeHTML(
+          getFriendlyErrorMessage(
+            error,
+            "銀河資料載入失敗，請稍後再試。"
+          )
+        )}
       </p>
+      <button id="retryGalaxyLoad" class="mini-button" type="button">
+        重新載入
+      </button>
     `;
+
+    document
+      .getElementById("retryGalaxyLoad")
+      ?.addEventListener("click", loadGalaxy);
     return;
   }
-
-  const planets = planetsResult.data;
-  const questions = questionsResult.data;
-  const answers = answersResult.data;
 
   const answerMap = new Map(
     answers.map((answer) => [
@@ -421,34 +468,41 @@ document
       return;
     }
 
-    const { data, error } =
-      await window.db.rpc(
-        "rename_my_ship",
-        {
-          p_ship_name: shipName
-        }
-      );
+    try {
+      const { data, error } =
+        await window.db.rpc(
+          "rename_my_ship",
+          {
+            p_ship_name: shipName
+          }
+        );
 
-    if (error) {
+      if (error) {
+        throw error;
+      }
+
+      document.getElementById(
+        "shipName"
+      ).textContent = data.ship_name;
+
       showMessage(
         message,
-        error.message,
+        "飛船名稱已更新。",
+        "success"
+      );
+
+      playTone(650, 0.12, "square");
+    } catch (error) {
+      console.error(error);
+      showMessage(
+        message,
+        getFriendlyErrorMessage(
+          error,
+          "飛船名稱更新失敗，請稍後再試。"
+        ),
         "error"
       );
-      return;
     }
-
-    document.getElementById(
-      "shipName"
-    ).textContent = data.ship_name;
-
-    showMessage(
-      message,
-      "飛船名稱已更新。",
-      "success"
-    );
-
-    playTone(650, 0.12, "square");
   });
 
 loadGalaxy();
