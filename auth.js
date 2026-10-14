@@ -86,13 +86,8 @@ loginForm.addEventListener("submit", async (event) => {
     const requested =
       parameters.get("next") || "levels.html";
 
-    const allowed =
-      /^(levels|practice|leaderboard)\.html(\?.*)?$/.test(
-        requested
-      );
-
     location.href =
-      allowed ? requested : "levels.html";
+      resolveSafeNextPage(requested);
   } catch (error) {
     console.error(error);
     showMessage(
@@ -233,3 +228,39 @@ registerForm.addEventListener(
     location.href = "levels.html";
   }
 })();
+
+function resolveSafeNextPage(value) {
+  const rawValue = String(value || "");
+  const [path, query = ""] =
+    rawValue.split("?");
+
+  const allowedPages = new Set([
+    "levels.html",
+    "practice.html",
+    "leaderboard.html"
+  ]);
+
+  if (!allowedPages.has(path)) {
+    return "levels.html";
+  }
+
+  if (path !== "practice.html") {
+    return path;
+  }
+
+  const params = new URLSearchParams(query);
+  const parsedLevel = Number(
+    params.get("level") ||
+      params.get("level_id") ||
+      params.get("id")
+  );
+
+  if (
+    Number.isInteger(parsedLevel) &&
+    parsedLevel > 0
+  ) {
+    return `practice.html?level=${parsedLevel}`;
+  }
+
+  return "practice.html";
+}
